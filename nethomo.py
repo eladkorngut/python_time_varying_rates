@@ -35,11 +35,10 @@ if __name__ == '__main__':
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q = 0.75, 10.0, 100.0
-    interaction_strength = 2.0
+    factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
-            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='wn' or prog=='wnr' :
+            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
@@ -262,43 +261,5 @@ if __name__ == '__main__':
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
                           str(Alpha) + ' ' + str(Time_limit) + ' ' + str(bank) + ' ' + str(outfile)+ ' ' + str(infile) + ' ' +
                           str(Num_inital_conditions)+ ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta) +
-                          ' ' + str(factor) + ' ' + str(duration) + ' ' + str(time_q))
-    elif prog =='wn':
-        # run a weighted network MTE
-        for n in range(Num_different_networks):
-            G = rand_weighted_networks.bulid_weighted_network(N,k,eps_din,eps_dout,interaction_strength)
-            G = netinithomo.set_graph_attriubute_DiGraph(G)
-            infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
-            outfile ='o_eps_in' + str(np.abs(eps_din)).replace('.', '') +'eps_dout' + str(np.abs(eps_dout)).replace('.', '')
-            k_avg_graph,eps_in_graph,eps_out_graph = rand_weighted_networks.weighted_epsilon(G)
-            Beta_graph = Lam/k_avg_graph
-            Beta = Beta_graph / (1 + np.sign(eps_din)*eps_in_graph * np.sign(eps_dout)* eps_out_graph)
-            f = open('parameters_'+outfile + '.csv', "a+")
-            with f:
-                writer = csv.writer(f)
-                writer.writerows([[k_avg_graph, np.sign(eps_din)*eps_in_graph,np.sign(eps_dout)*eps_out_graph]])
-            f.close()
-            for p in range(parts):
-                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
-                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile)+ ' ' + str(infile) + ' ' + str(Num_inital_conditions)+ ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta))
-    elif prog =='wnr':
-        # run a weighted network extract mean infected and std
-        for n in range(Num_different_networks):
-            G = rand_weighted_networks.bulid_weighted_network(N,k,eps_din,eps_dout,interaction_strength)
-            G = netinithomo.set_graph_attriubute_DiGraph(G)
-            infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
-            outfile ='o_eps_in' + str(np.abs(eps_din)).replace('.', '') +'eps_dout' + str(np.abs(eps_dout)).replace('.', '')
-            k_avg_graph,eps_in_graph,eps_out_graph = rand_weighted_networks.weighted_epsilon(G)
-            Beta_graph = Lam/k_avg_graph
-            Beta = Beta_graph / (1 + np.sign(eps_din)*eps_in_graph * np.sign(eps_dout)* eps_out_graph)
-            f = open('parameters_'+outfile + '.csv', "a+")
-            with f:
-                writer = csv.writer(f)
-                writer.writerows([[k_avg_graph, np.sign(eps_din)*eps_in_graph,np.sign(eps_dout)*eps_out_graph]])
-            f.close()
-            for p in range(parts):
-                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
-                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile)+ ' ' + str(infile) + ' ' + str(Num_inital_conditions)+
-                          ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta)+ ' ' +str(Start_recording_time)+ ' ' +str(Time_limit))
+                          ' ' + str(factor) + ' ' + str(duration) + ' ' + str(time_q) + ' ' + str(beta_time_type))
+

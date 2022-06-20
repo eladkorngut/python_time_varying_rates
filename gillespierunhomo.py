@@ -150,7 +150,30 @@ def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_nu
     return 0
 
 
-def fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta,factor,duration,time_q):
+def fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta,factor,duration,time_q,type_q):
+
+    def create_time_varying_beta(Total_time,time_q,duration,quarntine,G,Alpha,Beta,type_q,R_tot,Rates,Beta_org):
+        if type_q=='c':
+            if Total_time > time_q and Total_time <= time_q + duration and quarntine == False:
+                # start a quarntine if there isn't one already and if the time is right
+                Beta = Beta * factor
+                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
+                quarntine = True
+            elif Total_time > time_q and Total_time > time_q + duration and quarntine == True:
+                # stop the quarantine and resume the previous infection rate
+                Beta = Beta_org
+                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
+                quarntine = False
+        elif type_q == 'p':
+            if Total_time > time_q and Total_time <= time_q + duration:
+                Beta = Beta * (np.cos((2 * np.pi * (Total_time - time_q)) / factor)) ** 2
+                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
+            elif Total_time > time_q and Total_time > time_q + duration:
+                # stop the quarantine and resume the previous infection rate
+                Beta = Beta_org
+                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
+        return quarntine,Beta, R_tot, Rates
+
     G=nx.read_gpickle(infile)
     seed_nodes= Num_inf
     Beta_org=Beta
@@ -177,18 +200,7 @@ def fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,runs,Num_in
         ######################
         while Num_inf > 0 and Total_time<Time_limit:
 
-
-            if Total_time>time_q and Total_time<=time_q+duration and quarntine == False:
-                # start a quarntine if there isn't one already and if the time is right
-                Beta = Beta*factor
-                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
-                quarntine = True
-            elif Total_time>time_q and Total_time>time_q+duration and quarntine==True:
-                # stop the quarantine and resume the previous infection rate
-                Beta = Beta/factor
-                R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
-                quarntine = False
-
+            quarntine,Beta, R_tot, Rates = create_time_varying_beta(Total_time,time_q,duration,quarntine,G,Alpha,Beta,type_q,R_tot,Rates,Beta_org)
 
             R_norm = np.cumsum(Rates)
             r_pos = R_tot * r[count, 1]
@@ -517,144 +529,6 @@ def fluctuation_run_extinction_DiGraph(Alpha,bank,outfile,infile,runs,Num_inf,ne
     return 0
 
 
-
-def fluctuation_run_extinction_weighted_graph(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
-    G = nx.read_gpickle(infile)
-    seed_nodes = Num_inf
-    for run_loop_counter in range(runs):
-        Total_time = 0.0
-        count = 0
-        Num_inf = seed_nodes
-        r = np.random.uniform(0, 1, (bank, 2))
-        R_tot, Rates = netinithomo.inatlize_inf_weighted_graph(G,Num_inf,G.number_of_nodes(),Alpha,Beta)
-        ######################
-        # Main Gillespie Loop
-        ######################
-        while Num_inf > 0:
-            R_norm = np.cumsum(Rates)
-            r_pos = R_tot * r[count, 1]
-            person = bisect.bisect_left(R_norm, r_pos)
-            tau= np.log(1 / r[count, 0]) / R_tot
-            Total_time = Total_time + tau
-
-            try:
-                if G.nodes[person]['infected'] == True:
-                  pass
-            except:
-                  print('Accessing G.node[person][infected] failed value of person is ',person)
-                  if person == G.number_of_nodes():
-                      person =G.number_of_nodes()-1
-
-            if G.nodes[person]['infected'] == True:
-                Num_inf = Num_inf - 1
-                Rates[person] = 0.0
-                for Neighbor in G.successors(person):
-                    if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] - Beta*G[person][Neighbor]['weight']
-                        R_tot = R_tot - Beta*G[person][Neighbor]['weight']
-                for Neighbor in G.predecessors(person):
-                    if G.nodes[Neighbor]['infected'] == True:
-                        Rates[person] = Rates[person] + Beta*G[Neighbor][person]['weight']
-                R_tot = R_tot + Rates[person] - Alpha
-                G.nodes[person]['infected'] = False
-            else:
-                Num_inf = Num_inf + 1
-                for Neighbor in G.successors(person):
-                    if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] + Beta*G[person][Neighbor]['weight']
-                        R_tot = R_tot + Beta*G[person][Neighbor]['weight']
-                R_tot = R_tot - Rates[person] + Alpha
-                Rates[person] = Alpha
-                G.nodes[person]['infected'] = True
-            count = count + 1
-            if count >= bank:
-                r = np.random.uniform(0, 1, (bank, 2))
-                count = 0
-        f = open(outfile+'.csv',"a+")
-        with f:
-            writer = csv.writer(f)
-            writer.writerows([[Total_time,network_number]])
-        f.close()
-    return 0
-
-
-def fluctuation_weighted_run_infected_no_decay(Alpha,bank,outfile,infile,runs,Num_inf,network_number,
-                                               Beta,start_recording_time,Time_limit):
-    G = nx.read_gpickle(infile)
-    seed_nodes = Num_inf
-    for run_loop_counter in range(runs):
-        T,I=[],[]
-        runs_csv=[]
-        runs_csv.append(run_loop_counter)
-        Total_time = 0.0
-        T.append(Total_time)
-        count = 0
-        Num_inf = seed_nodes
-        r = np.random.uniform(0, 1, (bank, 2))
-        nx.set_node_attributes(G, False, 'infected')
-        R_tot, Rates = netinithomo.inatlize_inf_weighted_graph(G,Num_inf,G.number_of_nodes(),Alpha,Beta)
-        net_num = []
-        I.append(Num_inf)
-        net_num.append(network_number)
-
-        ######################
-        # Main Gillespie Loop
-        ######################
-        while Num_inf > 0 and Total_time<Time_limit:
-            R_norm = np.cumsum(Rates)
-            r_pos = R_tot * r[count, 1]
-            person = bisect.bisect_left(R_norm, r_pos)
-            tau= np.log(1 / r[count, 0]) / R_tot
-            Total_time = Total_time + tau
-
-            try:
-                if G.nodes[person]['infected'] == True:
-                  pass
-            except:
-                  print('Accessing G.node[person][infected] failed value of person is ',person)
-                  if person == G.number_of_nodes():
-                      person =G.number_of_nodes()-1
-
-            if G.nodes[person]['infected'] == True and Num_inf>1:
-                Num_inf = Num_inf - 1
-                Rates[person] = 0.0
-                for Neighbor in G.successors(person):
-                    if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] - Beta*G[person][Neighbor]['weight']
-                        R_tot = R_tot - Beta*G[person][Neighbor]['weight']
-                for Neighbor in G.predecessors(person):
-                    if G.nodes[Neighbor]['infected'] == True:
-                        Rates[person] = Rates[person] + Beta*G[Neighbor][person]['weight']
-                R_tot = R_tot + Rates[person] - Alpha
-                G.nodes[person]['infected'] = False
-            else:
-                Num_inf = Num_inf + 1
-                for Neighbor in G.successors(person):
-                    if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] + Beta*G[person][Neighbor]['weight']
-                        R_tot = R_tot + Beta*G[person][Neighbor]['weight']
-                R_tot = R_tot - Rates[person] + Alpha
-                Rates[person] = Alpha
-                G.nodes[person]['infected'] = True
-            count = count + 1
-            if count >= bank:
-                r = np.random.uniform(0, 1, (bank, 2))
-                count = 0
-            if Total_time-T[-1]>=0.1 and Total_time>=start_recording_time:
-                I.append(Num_inf)
-                T.append(Total_time)
-                net_num.append(network_number)
-                runs_csv.append(run_loop_counter)
-        f = open(outfile + '.csv', "a+")
-        l = [T, I,runs_csv,net_num]
-        l = zip(*l)
-        with f:
-            writer = csv.writer(f)
-            writer.writerows(l)
-        f.close()
-    return 0
-
-
 def fluctuation_init_track_lam(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank,outfilename):
     lam_plus, lam_minus = avg_beta*(1+epsilon), avg_beta*(1-epsilon)
     Beta = netinithomo.bi_beta(N, epsilon, avg_beta)
@@ -861,19 +735,18 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q = 0.5, 15.0, 100.0
-    interaction_strength = 2.0
-
+    factor, duration, time_q = 0.5, 0.5, 100.0
+    beta_time_type='p'
 
     # G = nx.random_regular_graph(k, N)
     # G = nx.complete_graph(N)
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, 0.0, 0.0, 1.0)
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
-    # d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
-    #     k * (1 + eps_dout))
-    # G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
-    # G = netinithomo.set_graph_attriubute_DiGraph(G)
+    d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
+        k * (1 + eps_dout))
+    G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
+    G = netinithomo.set_graph_attriubute_DiGraph(G)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \
     #     if net_dist == 'gauss' else np.random.gamma((avg / epsilon) ** 2, epsilon ** 2 / avg, N) \
@@ -897,24 +770,15 @@ def actasmain():
     # Beta = Lam/np.mean([G.in_degree(n) for n in G.nodes()])
     n=0
 
-    G = rand_weighted_networks.bulid_weighted_network(N, k, eps_din, eps_dout, interaction_strength)
-    G = netinithomo.set_graph_attriubute_DiGraph(G)
-    infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n) + '.pickle'
-    nx.write_gpickle(G, infile)
-    outfile = 'o_eps_in' + str(np.abs(eps_din)).replace('.', '') + 'eps_dout' + str(np.abs(eps_dout)).replace('.', '')
-    k_avg_graph, eps_in_graph, eps_out_graph = rand_weighted_networks.weighted_epsilon(G)
-    Beta_graph = Lam / k_avg_graph
-    Beta = Beta_graph / (1 + np.sign(eps_din) * eps_in_graph * np.sign(eps_dout) * eps_out_graph)
 
     # fluctuation_run_extinction_weighted_graph(Alpha, bank, outfile, infile,
     #                                           Num_inital_conditions, Num_inf, n,
     #                                           Beta)
-    fluctuation_weighted_run_infected_no_decay(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,Start_recording_time,Time_limit)
-    # nx.write_gpickle(G, graphname)
+    nx.write_gpickle(G, graphname)
     # infile = graphname + '_' + str(epsilon).replace('.', '') + '_' + str(n)+'.pickle'
     infile=graphname
     # fluctuation_run_extinction(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,1,Beta)
-    # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q)
+    fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, 1, Beta,Start_recording_time)
     # fluctuation_run_extinction_undirected_graph(Alpha, bank, outfile, infile, Num_inital_conditions,
@@ -956,14 +820,5 @@ if __name__ == '__main__':
          elif sys.argv[1] == 'q':
              # activate quarntine at a given time
              fluctuation_run_catastrophe(float(sys.argv[2]), float(sys.argv[3]) ,int(sys.argv[4]), sys.argv[5],
-                                         sys.argv[6],int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),float(sys.argv[11]),float(sys.argv[12]),float(sys.argv[13]))
-         elif sys.argv[1] == 'wn':
-             # Simulate an extinction process on a graph where there is connection between next nearest neighbors
-             fluctuation_run_extinction_weighted_graph(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5],
-                                                       int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]),
-                                                       float(sys.argv[9]))
-         elif sys.argv[1] == 'wnr':
-             # Mesaure the number of infected nodes (endemic state) when the network is with next nearest interactions
-             fluctuation_weighted_run_infected_no_decay(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5],
-                                                int(sys.argv[6]), int(sys.argv[7]), int(sys.argv[8]),
-                                                float(sys.argv[9]),float(sys.argv[10]),float(sys.argv[11]))
+             sys.argv[6],int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),float(sys.argv[11]),
+             float(sys.argv[12]),float(sys.argv[13]),sys.argv[14])
