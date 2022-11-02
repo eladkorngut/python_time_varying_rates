@@ -39,7 +39,7 @@ if __name__ == '__main__':
     rate_type ='c'
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
-            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q':
+            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q'or prog=='th':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
