@@ -268,7 +268,7 @@ if __name__ == '__main__':
         for n in range(Num_different_networks):
             G = nx.random_regular_graph(k, N)
             # G = nx.complete_graph(N)
-            G = netinithomo.intalize_homo_temporal_graph(G, N, beta)
+            G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(Beta_avg).replace('.', '') + '_' + str(n)+'.pickle'
             nx.write_gpickle(G, infile)
             outfile ='o'+str(Beta_avg).replace('.', '')

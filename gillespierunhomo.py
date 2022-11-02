@@ -916,7 +916,7 @@ def actasmain():
         return Beta_avg
     # beta = lambda t: Beta_avg
     # G = nx.random_regular_graph(k, N)
-    G = netinithomo.intalize_homo_temporal_graph(G, beta)
+    G = netinithomo.intalize_homo_temporal_graph(G)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \
     #     if net_dist == 'gauss' else np.random.gamma((avg / epsilon) ** 2, epsilon ** 2 / avg, N) \

@@ -40,7 +40,7 @@ def intalize_lam_graph(G, N, beta_sus,beta_inf):
         G.nodes[i]['spread_rate'] = beta_inf[i]
     return G
 
-def intalize_homo_temporal_graph(G, fun):
+def intalize_homo_temporal_graph(G):
     nx.set_node_attributes(G, False, 'infected')
     # nx.set_node_attributes(G, set(),'infected_neghibors')
     return G
