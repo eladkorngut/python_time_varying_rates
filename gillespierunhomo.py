@@ -1000,6 +1000,6 @@ if __name__ == '__main__':
              # first_reaction_run_sis(float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), sys.argv[5],sys.argv[6],
              #                        int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]))
              temporal_direct_run_no_decay(float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), sys.argv[5],sys.argv[6],
-                                    int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
+                                    int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),float(sys.argv[11]),sys.argv[12])
 
 

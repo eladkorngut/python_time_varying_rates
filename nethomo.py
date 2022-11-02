@@ -275,5 +275,5 @@ if __name__ == '__main__':
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
                           str(Alpha) + ' ' + str(Time_limit) + ' ' + str(bank)+ ' ' + str(outfile) + ' ' +
-                          str(infile) + ' ' + str(Num_inital_conditions)
-                          + ' ' +str(Num_inf) + ' ' +str(n) + ' ' +str(Start_recording_time)+' ' +str(rate_type))
+                          str(infile) + ' ' + str(Num_inital_conditions) + ' ' +str(Num_inf) + ' ' + str(n) + ' '
+                          + str(Beta_avg) + str(Start_recording_time) +' ' +str(rate_type))
