@@ -6,8 +6,10 @@ import csv
 import pickle
 import sys
 import rand_networks
-
+from scipy.integrate import quad
+from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
+import dill
 
 
 
@@ -348,6 +350,95 @@ def fluctuation_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,n
     return 0
 
 
+
+def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta,start_recording_time,rate_type):
+
+    def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
+        Rates = []
+        integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
+        if G.nodes[0]['infected'] == True:
+            Rates.append(Alpha*dt)
+        else:
+            # Rates.append(len(G.nodes[0]['infected_neghibors']) * integral_fun_t)
+            Rates.append(len(infected_neighbors[0]) * integral_fun_t)
+        for i in range(1,G.number_of_nodes()):
+            if G.nodes[i]['infected'] == True:
+                Rates.append(Rates[-1] + Alpha*dt)
+            else:
+                Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
+        return Rates
+
+    G=nx.read_gpickle(infile)
+    seed_nodes = Num_inf
+    for run_loop_counter in range(runs):
+        T,I,runs_csv = [],[],[]
+        runs_csv.append(run_loop_counter)
+        Total_time = 0.0
+        T.append(Total_time)
+        count = 0
+        Num_inf = seed_nodes
+        r = np.random.uniform(0, 1, (bank, 2))
+        for l in range(G.number_of_nodes()):
+            G.nodes[l]['infected'] = False
+        fun = lambda t: Beta if rate_type == 'c' else lambda t: np.sin(t)
+        SI_connections,infected_neighbors = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
+        net_num = []
+        I.append(Num_inf)
+        net_num.append(network_number)
+
+        ######################
+        # Main Gillespie Loop
+        ######################
+        while Num_inf > 0 and Total_time<Time_limit:
+            # R_norm = np.cumsum(Rates)
+            integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
+            integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
+            fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
+            tau = float(fsolve(fun_rand_time, 1.0))
+            R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
+            r_pos = R_norm[-1] * r[count, 1]
+            person = bisect.bisect_left(R_norm, r_pos)
+            Total_time = Total_time + tau
+
+            try:
+                if G.nodes[person]['infected'] == True:
+                  pass
+            except:
+                  print('Accessing G.noes[person][infected] failed value of person is ',person)
+                  if person == G.number_of_nodes():
+                      person =G.number_of_nodes()-1
+
+            if G.nodes[person]['infected'] == True:
+                G.nodes[person]['infected'] = False
+                Num_inf = Num_inf - 1
+                for Neighbor in G[person]:
+                    # G.nodes[Neighbor]['infected_neghibors'].remove(person)
+                    infected_neighbors[Neighbor].remove(person)
+            else:
+                Num_inf = Num_inf + 1
+                G.nodes[person]['infected'] = True
+                for Neighbor in G[person]:
+                    # G.nodes[Neighbor]['infected_neghibors'].add(person)
+                    infected_neighbors[Neighbor].add(person)
+            count = count + 1
+            if count >= bank:
+                r = np.random.uniform(0, 1, (bank, 2))
+                count = 0
+            if Total_time-T[-1]>=0.1 and Total_time>=start_recording_time:
+                I.append(Num_inf)
+                T.append(Total_time)
+                net_num.append(network_number)
+                runs_csv.append(run_loop_counter)
+        f = open(outfile + '.csv', "a+")
+        l = [T, I,runs_csv,net_num]
+        l = zip(*l)
+        with f:
+            writer = csv.writer(f)
+            writer.writerows(l)
+        f.close()
+    return 0
+
+
 def fluctuation_run_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
     G = nx.read_gpickle(infile)
     seed_nodes = Num_inf
@@ -407,6 +498,80 @@ def fluctuation_run_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         f.close()
     return 0
 
+
+
+def first_reaction_run_sis(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,start_recording_time,rate_type):
+
+    def integrand_homo_temporal_graph(G, l, t):
+        sum = 0
+        for i in G.nodes[l]['infected_neghibors']:
+            sum = sum + G.nodes[i]['rate'](t)
+        return sum
+
+    G = nx.read_gpickle(infile)
+
+    seed_nodes = Num_inf
+    for run_loop_counter in range(runs):
+        T,I,runs_csv = [],[],[]
+        runs_csv.append(run_loop_counter)
+        net_num = []
+        I.append(Num_inf)
+        net_num.append(network_number)
+
+        Total_time,count,Num_inf = 0.0,0,seed_nodes
+        T.append(Total_time)
+        r = np.random.uniform(0, 1,(bank,G.number_of_nodes()))
+        scheduler = netinithomo.inatlize_homo_temporal_graph(G,Num_inf,G.number_of_nodes(),Alpha)
+        rnext,tnext = scheduler.topitem()
+        Total_time = tnext
+        if G.nodes[rnext]['infected'] == True:
+            G.nodes[rnext]['infected'] = False
+            Num_inf =Num_inf-1
+            for Neighbor in G[rnext]:
+                G.nodes[Neighbor]['infected_neighbor'].remove(rnext)
+        else:
+            Num_inf =Num_inf + 1
+            G.nodes[rnext]['infected'] = True
+            for Neighbor in G[rnext]:
+                G.nodes[Neighbor]['infected_neighbor'].add(rnext)
+        ###########################
+        # Main Next reaction loop
+        ###########################
+        I.append(Num_inf)
+        T.append(Total_time)
+        while Num_inf > 0 and Total_time<Time_limit:
+            for l in range(G.number_of_nodes()):
+                if G.nodes[l]['infected'] == False:
+                    integral_fun_t = lambda tf: quad(lambda t: integrand_homo_temporal_graph(G, l, t + Total_time),0, tf)[0]
+                    scheduler[l] = fsolve(quad(integral_fun_t + np.log(r[l]), -np.log(r[l])/integrand_homo_temporal_graph(G, l, Total_time))[0])
+                else:
+                    scheduler[l] = -np.log(r[l]) / Alpha
+            rnext, tnext = scheduler.topitem()
+            if G.nodes[rnext]['infected'] == True:
+                G.nodes[rnext]['infected'] = False
+                Num_inf = Num_inf - 1
+                for Neighbor in G[rnext]:
+                    G.nodes[Neighbor]['infected_neighbor'].remove(rnext)
+            else:
+                Num_inf = Num_inf + 1
+                G.nodes[rnext]['infected'] = True
+                for Neighbor in G[rnext]:
+                    G.nodes[Neighbor]['infected_neighbor'].add(rnext)
+            Total_time = Total_time + tnext
+            count = count+1
+            if Total_time-T[-1]>=0.1 and Total_time>=start_recording_time:
+                I.append(Num_inf)
+                T.append(Total_time)
+                net_num.append(network_number)
+                runs_csv.append(run_loop_counter)
+    f = open(outfile + '.csv', "a+")
+    l = [T, I, runs_csv, net_num]
+    l = zip(*l)
+    with f:
+        writer = csv.writer(f)
+        writer.writerows(l)
+    f.close()
+    return 0
 
 
 def fluctuation_run_extinction_undirected_graph(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
@@ -704,23 +869,23 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 100
-    k = 50
+    N = 400
+    k = 200
     x = 0.2
-    eps_din,eps_dout = 0.1,0.1
-    eps_sus,eps_lam = 0.1,0.1
+    eps_din,eps_dout = 0.0,0.0
+    eps_sus,eps_lam = 0.0,0.0
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='gauss_c'
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.6
+    Lam = 1.5
     Time_limit = 200
     Start_recording_time = 50
     Beta_avg = Lam / k
-    Num_different_networks= 2
-    Num_inital_conditions= 2
+    Num_different_networks= 1
+    Num_inital_conditions= 1
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -737,16 +902,21 @@ def actasmain():
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
     factor, duration, time_q = 0.5, 0.5, 100.0
     beta_time_type='p'
-
-    # G = nx.random_regular_graph(k, N)
+    rate_type= 'c'
+    G = nx.random_regular_graph(k, N)
     # G = nx.complete_graph(N)
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, 0.0, 0.0, 1.0)
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
-    d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
-        k * (1 + eps_dout))
-    G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
-    G = netinithomo.set_graph_attriubute_DiGraph(G)
+    # d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
+    #     k * (1 + eps_dout))
+    # G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
+    # G = netinithomo.set_graph_attriubute_DiGraph(G)
+    def beta(t):
+        return Beta_avg
+    # beta = lambda t: Beta_avg
+    # G = nx.random_regular_graph(k, N)
+    G = netinithomo.intalize_homo_temporal_graph(G, beta)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \
     #     if net_dist == 'gauss' else np.random.gamma((avg / epsilon) ** 2, epsilon ** 2 / avg, N) \
@@ -778,7 +948,11 @@ def actasmain():
     # infile = graphname + '_' + str(epsilon).replace('.', '') + '_' + str(n)+'.pickle'
     infile=graphname
     # fluctuation_run_extinction(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,1,Beta)
-    fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
+    # first_reaction_run_sis(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n,
+    #                        Start_recording_time)
+    temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Beta,
+                                 Start_recording_time, rate_type)
+    # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, 1, Beta,Start_recording_time)
     # fluctuation_run_extinction_undirected_graph(Alpha, bank, outfile, infile, Num_inital_conditions,
@@ -787,8 +961,8 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = True
-    if submit==False:
+    submit = False
+    if submit==True:
         actasmain()
     else:
          if sys.argv[1]=='i':
@@ -822,3 +996,10 @@ if __name__ == '__main__':
              fluctuation_run_catastrophe(float(sys.argv[2]), float(sys.argv[3]) ,int(sys.argv[4]), sys.argv[5],
              sys.argv[6],int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),float(sys.argv[11]),
              float(sys.argv[12]),float(sys.argv[13]),sys.argv[14])
+         elif sys.argv[1] == 'th':
+             # first_reaction_run_sis(float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), sys.argv[5],sys.argv[6],
+             #                        int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]))
+             temporal_direct_run_no_decay(float(sys.argv[2]), float(sys.argv[3]), int(sys.argv[4]), sys.argv[5],sys.argv[6],
+                                    int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
+
+

@@ -4,9 +4,12 @@ import random as rand
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 from scipy.stats import gamma
+from scipy.optimize import fsolve
 from itertools import chain
 import rand_networks
-
+from pqdict import pqdict
+from scipy.integrate import quad
+import dill
 
 def intialize_graph(G, N, Num_inf, Beta, Alpha):
     ######################################################
@@ -37,6 +40,11 @@ def intalize_lam_graph(G, N, beta_sus,beta_inf):
         G.nodes[i]['spread_rate'] = beta_inf[i]
     return G
 
+def intalize_homo_temporal_graph(G, fun):
+    nx.set_node_attributes(G, False, 'infected')
+    # nx.set_node_attributes(G, set(),'infected_neghibors')
+    return G
+
 
 def set_graph_attriubute_DiGraph(G):
     nx.set_node_attributes(G, False, 'infected')
@@ -56,6 +64,49 @@ def inatlize_inf_graph(G,Num_inf,N,Alpha,Beta):
                     Rates[i] = Rates[i] +Beta*(G.nodes[i]['contact_rate'] * G.nodes[l]['spread_rate'])
     R_tot = np.sum(Rates)
     return R_tot, Rates
+
+
+def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
+    for i in rand.sample(range(0, N - 1), Num_inf):
+        G.nodes[i]['infected'] = True
+    nx.set_node_attributes(G, fun, 'rate')
+    SI_connections = 0
+    infected_neighbors =[]
+    for i in range(N):
+        infected_neighbors.append(set())
+    for l in range(N):
+        if G.nodes[l]['infected'] == True:
+            for i in G[l]:
+                # G.nodes[i]['infected_neghibors'].add(l)
+                infected_neighbors[i].add(l)
+                if G.nodes[i]['infected'] == True:
+                    SI_connections = SI_connections + 1
+    return SI_connections,infected_neighbors
+
+
+def integrand_homo_temporal_graph(G,l,t):
+    sum=0
+    for i in G.nodes[l]['infected_neghibors']:
+        sum = sum + G.nodes[i]['rate'](t)
+    return sum
+
+
+def inatlize_homo_temporal_graph(G,Num_inf,N,Alpha):
+    for i in rand.sample(range(0, N - 1), Num_inf):
+        G.nodes[i]['infected'] = True
+    scheduler = pqdict()
+    r = np.random.uniform(0, 1, N)
+    for l in range(N):
+        if G.nodes[l]['infected'] == True:
+            scheduler[l] = -np.log(r[l])/Alpha
+            for i in G[l]:
+                G.nodes[i]['infected_neghibors'].add(l)
+    for l in range(N):
+        if G.nodes[l]['infected'] == False:
+            integral_fun_t = lambda tf:quad(lambda t:integrand_homo_temporal_graph(G,l,t),[0,tf])
+            scheduler[l]=fsolve(quad(integral_fun_t+np.log(r[l]),-np.log(r[l])))
+    return scheduler,
+
 
 # def inatlize_quarntine_graph(G,N,Alpha,Beta):
 #     Rates = np.zeros(N)

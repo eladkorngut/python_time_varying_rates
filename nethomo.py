@@ -36,6 +36,7 @@ if __name__ == '__main__':
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
+    rate_type ='c'
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q':
@@ -262,4 +263,17 @@ if __name__ == '__main__':
                           str(Alpha) + ' ' + str(Time_limit) + ' ' + str(bank) + ' ' + str(outfile)+ ' ' + str(infile) + ' ' +
                           str(Num_inital_conditions)+ ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta) +
                           ' ' + str(factor) + ' ' + str(duration) + ' ' + str(time_q) + ' ' + str(beta_time_type))
-
+    elif prog =='th':
+        beta=lambda t: Beta_avg
+        for n in range(Num_different_networks):
+            G = nx.random_regular_graph(k, N)
+            # G = nx.complete_graph(N)
+            G = netinithomo.intalize_homo_temporal_graph(G, N, beta)
+            infile = graphname + '_' + str(Beta_avg).replace('.', '') + '_' + str(n)+'.pickle'
+            nx.write_gpickle(G, infile)
+            outfile ='o'+str(Beta_avg).replace('.', '')
+            for p in range(parts):
+                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
+                          str(Alpha) + ' ' + str(Time_limit) + ' ' + str(bank)+ ' ' + str(outfile) + ' ' +
+                          str(infile) + ' ' + str(Num_inital_conditions)
+                          + ' ' +str(Num_inf) + ' ' +str(n) + ' ' +str(Start_recording_time)+' ' +str(rate_type))
