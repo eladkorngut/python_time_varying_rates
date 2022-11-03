@@ -1,5 +1,6 @@
 import os
 import networkx as nx
+import numpy
 import numpy as np
 import netinithomo
 import rand_networks
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     Num_inital_conditions= 1
     bank = 1000000
     parts = 1
-    foldername ='const_beta_N2000_k200_timelimit1100_start100_net1_inital1_lam10'
+    foldername ='sin_beta_N2000_k200_timelimit1100_start100_net1_inital1_lam10'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
@@ -37,6 +38,9 @@ if __name__ == '__main__':
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
     rate_type ='c'
+    amplitude,frequency=0.1,1.0
+    parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
+
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q'or prog=='th':
@@ -266,6 +270,12 @@ if __name__ == '__main__':
     elif prog =='th':
         beta=lambda t: Beta_avg
         for n in range(Num_different_networks):
+            if rate_type=='c':
+                with open('parmeters.npy','wb') as f:
+                    np.save(f,np.array[Beta_avg])
+            elif rate_type=='s':
+                with open('parmeters.npy','wb') as f:
+                    np.save(f,np.array([Beta_avg,amplitude,frequency]))
             G = nx.random_regular_graph(k, N)
             # G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)

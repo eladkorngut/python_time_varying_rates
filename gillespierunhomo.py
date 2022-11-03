@@ -371,6 +371,12 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
         return Rates
 
     G=nx.read_gpickle(infile)
+    if rate_type=='c':
+        Beta = float(np.load('parmeters.npy'))
+        fun = lambda t:Beta
+    elif rate_type=='s':
+        Beta,amplitude,frequency = np.load('parmeters.npy')
+        fun = lambda t: Beta*(1+amplitude*np.cos(frequency*t))
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         T,I,runs_csv = [],[],[]
@@ -382,7 +388,7 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
         r = np.random.uniform(0, 1, (bank, 2))
         for l in range(G.number_of_nodes()):
             G.nodes[l]['infected'] = False
-        fun = lambda t: Beta if rate_type == 'c' else lambda t: np.sin(t)
+        # fun = lambda t: Beta if rate_type == 'c' else lambda t: np.sin(t)
         SI_connections,infected_neighbors = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
         net_num = []
         I.append(Num_inf)
@@ -904,7 +910,11 @@ def actasmain():
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
     factor, duration, time_q = 0.5, 0.5, 100.0
     beta_time_type='p'
-    rate_type= 'c'
+    rate_type= 's'
+    amplitude,frequency=0.1,1.0
+    parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
+
+
     G = nx.random_regular_graph(k, N)
     # G = nx.complete_graph(N)
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
@@ -952,6 +962,12 @@ def actasmain():
     # fluctuation_run_extinction(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,1,Beta)
     # first_reaction_run_sis(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n,
     #                        Start_recording_time)
+    if rate_type == 'c':
+        with open('parmeters.npy', 'wb') as f:
+            np.save(f, np.array([Beta_avg]))
+    elif rate_type == 's':
+        with open('parmeters.npy', 'wb') as f:
+            np.save(f, np.array([Beta_avg, amplitude, frequency]))
     temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Beta,
                                  Start_recording_time, rate_type)
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
@@ -963,7 +979,7 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = False
+    submit = True
     if submit==True:
         actasmain()
     else:
