@@ -10,6 +10,8 @@ from scipy.integrate import quad
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
 import dill
+import warnings
+warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 
 
 
