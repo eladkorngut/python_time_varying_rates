@@ -968,8 +968,7 @@ def actasmain():
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
-    temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Beta,
-                                 Start_recording_time, rate_type)
+    temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, 1, Beta,Start_recording_time)
@@ -979,7 +978,7 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = True
+    submit = False
     if submit==True:
         actasmain()
     else:
