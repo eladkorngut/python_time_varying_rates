@@ -410,13 +410,13 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
                   if person == G.number_of_nodes():
                       person =G.number_of_nodes()-1
 
-            if G.nodes[person]['infected'] == True:
+            if G.nodes[person]['infected'] == True and Num_inf>1:
                 G.nodes[person]['infected'] = False
                 Num_inf = Num_inf - 1
                 for Neighbor in G[person]:
                     # G.nodes[Neighbor]['infected_neghibors'].remove(person)
                     infected_neighbors[Neighbor].remove(person)
-            else:
+            elif G.nodes[person]['infected'] == False:
                 Num_inf = Num_inf + 1
                 G.nodes[person]['infected'] = True
                 for Neighbor in G[person]:
