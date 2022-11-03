@@ -13,16 +13,16 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 2000
-    k = 200
+    N = 300
+    k = 100
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='uniform_c'
-    prog = 'th' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.0
+    prog = 'thx' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    Lam = 1.3
     Time_limit = 1100
     Start_recording_time = 100
     Beta_avg = Lam / k
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
-            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q'or prog=='th':
+            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
@@ -268,7 +268,6 @@ if __name__ == '__main__':
                           str(Num_inital_conditions)+ ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta) +
                           ' ' + str(factor) + ' ' + str(duration) + ' ' + str(time_q) + ' ' + str(beta_time_type))
     elif prog =='th':
-        beta=lambda t: Beta_avg
         for n in range(Num_different_networks):
             if rate_type=='c':
                 with open('parmeters.npy','wb') as f:
@@ -279,7 +278,7 @@ if __name__ == '__main__':
             G = nx.random_regular_graph(k, N)
             # G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)
-            infile = graphname + '_' + str(Beta_avg).replace('.', '') + '_' + str(n)+'.pickle'
+            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n)+'.pickle'
             nx.write_gpickle(G, infile)
             outfile ='o'+str(Beta_avg).replace('.', '')
             for p in range(parts):
@@ -287,3 +286,22 @@ if __name__ == '__main__':
                           str(Alpha) + ' ' + str(Time_limit) + ' ' + str(bank)+ ' ' + str(outfile) + ' ' +
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' +str(Num_inf) + ' ' + str(n) +
                           ' ' + str(Start_recording_time) + ' ' + str(rate_type))
+    elif prog == 'thx':
+        for n in range(Num_different_networks):
+            if rate_type == 'c':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array[Beta_avg])
+            elif rate_type == 's':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array([Beta_avg, amplitude, frequency]))
+            G = nx.random_regular_graph(k, N)
+            # G = nx.complete_graph(N)
+            G = netinithomo.intalize_homo_temporal_graph(G)
+            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
+            nx.write_gpickle(G, infile)
+            outfile = 'o' + str(Lam).replace('.', '')
+            for p in range(parts):
+                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
+                          str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
+                          ' ' + str(n)  + ' ' + str(rate_type))
