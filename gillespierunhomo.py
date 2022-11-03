@@ -1094,4 +1094,4 @@ if __name__ == '__main__':
                                     int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
          elif sys.argv[1] == 'thx':
              temporal_direct_extinction(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
-                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[9]),sys.argv[10])
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
