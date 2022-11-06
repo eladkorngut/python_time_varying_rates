@@ -470,7 +470,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         fun = lambda t:Beta
     elif rate_type=='s':
         Beta,amplitude,frequency = np.load('parmeters.npy')
-        fun = lambda t: Beta*(1+amplitude*np.cos(frequency*t))
+        fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0

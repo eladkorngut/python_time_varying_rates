@@ -13,21 +13,21 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 300
-    k = 100
+    N = 10
+    k = 10
     x = 0.2
     Num_inf = int(x * N)
-    Alpha = 1.0
+    Alpha = 5.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='uniform_c'
     prog = 'thx' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.3
+    Lam = 4.0
     Time_limit = 1100
     Start_recording_time = 100
-    Beta_avg = Lam / k
+    Beta_avg = Alpha*Lam / k
     Num_different_networks= 1
-    Num_inital_conditions= 1
+    Num_inital_conditions= 200
     bank = 1000000
     parts = 1
     foldername ='sin_beta_N2000_k200_timelimit1100_start100_net1_inital1_lam10'
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
     rate_type ='s'
-    amplitude,frequency=0.1,1.0
+    amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
@@ -294,8 +294,8 @@ if __name__ == '__main__':
             elif rate_type == 's':
                 with open('parmeters.npy', 'wb') as f:
                     np.save(f, np.array([Beta_avg, amplitude, frequency]))
-            G = nx.random_regular_graph(k, N)
-            # G = nx.complete_graph(N)
+            # G = nx.random_regular_graph(k, N)
+            G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
             nx.write_gpickle(G, infile)
