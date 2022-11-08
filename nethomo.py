@@ -26,11 +26,11 @@ if __name__ == '__main__':
     Time_limit = 1100
     Start_recording_time = 100
     Beta_avg = Alpha*Lam / k
-    Num_different_networks= 1
-    Num_inital_conditions= 200
+    Num_different_networks= 20
+    Num_inital_conditions= 30
     bank = 1000000
     parts = 1
-    foldername ='sin_beta_N2000_k200_timelimit1100_start100_net1_inital1_lam10'
+    foldername ='extinction_cos_beta_net20_init30_lam4_alpha5_epsilon08_freq1_N10_k10'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
