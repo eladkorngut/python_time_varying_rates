@@ -355,19 +355,27 @@ def fluctuation_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,n
 
 def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,start_recording_time,rate_type):
 
+    # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
+    #     Rates = []
+    #     integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
+    #     if G.nodes[0]['infected'] == True:
+    #         Rates.append(Alpha*dt)
+    #     else:
+    #         # Rates.append(len(G.nodes[0]['infected_neghibors']) * integral_fun_t)
+    #         Rates.append(len(infected_neighbors[0]) * integral_fun_t)
+    #     for i in range(1,G.number_of_nodes()):
+    #         if G.nodes[i]['infected'] == True:
+    #             Rates.append(Rates[-1] + Alpha*dt)
+    #         else:
+    #             Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
+    #     return Rates
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
         Rates = []
-        integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
-        if G.nodes[0]['infected'] == True:
-            Rates.append(Alpha*dt)
-        else:
-            # Rates.append(len(G.nodes[0]['infected_neghibors']) * integral_fun_t)
-            Rates.append(len(infected_neighbors[0]) * integral_fun_t)
-        for i in range(1,G.number_of_nodes()):
+        for i in range(G.number_of_nodes()):
             if G.nodes[i]['infected'] == True:
-                Rates.append(Rates[-1] + Alpha*dt)
+                Rates.append(Alpha)
             else:
-                Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
+                Rates.append(len(infected_neghibors[i])*fun(Total_time+dt))
         return Rates
 
     G=nx.read_gpickle(infile)
@@ -450,19 +458,28 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
 
 def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
 
+    # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
+    #     Rates = []
+    #     integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
+    #     if G.nodes[0]['infected'] == True:
+    #         Rates.append(Alpha*dt)
+    #     else:
+    #         Rates.append(len(infected_neighbors[0]) * integral_fun_t)
+    #     for i in range(1,G.number_of_nodes()):
+    #         if G.nodes[i]['infected'] == True:
+    #             Rates.append(Rates[-1] + Alpha*dt)
+    #         else:
+    #             Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
+    #     return Rates
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
         Rates = []
-        integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
-        if G.nodes[0]['infected'] == True:
-            Rates.append(Alpha*dt)
-        else:
-            Rates.append(len(infected_neighbors[0]) * integral_fun_t)
-        for i in range(1,G.number_of_nodes()):
+        for i in range(G.number_of_nodes()):
             if G.nodes[i]['infected'] == True:
-                Rates.append(Rates[-1] + Alpha*dt)
+                Rates.append(Alpha)
             else:
-                Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
+                Rates.append(len(infected_neghibors[i])*fun(Total_time+dt))
         return Rates
+
 
     G=nx.read_gpickle(infile)
     if rate_type=='c':
@@ -951,8 +968,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 400
-    k = 200
+    N = 100
+    k = 50
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -962,7 +979,7 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='gauss_c'
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.2
+    Lam = 1.5
     Time_limit = 200
     Start_recording_time = 50
     Beta_avg = Lam / k
@@ -1042,8 +1059,8 @@ def actasmain():
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
-    # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
+    temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
+    # temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
@@ -1054,7 +1071,7 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = False
+    submit = True
     if submit==True:
         actasmain()
     else:
