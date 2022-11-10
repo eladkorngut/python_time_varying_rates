@@ -79,7 +79,7 @@ def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
             for i in G[l]:
                 # G.nodes[i]['infected_neghibors'].add(l)
                 infected_neighbors[i].add(l)
-                if G.nodes[i]['infected'] == True:
+                if G.nodes[i]['infected'] == False:
                     SI_connections = SI_connections + 1
     return SI_connections,infected_neighbors
 

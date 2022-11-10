@@ -371,11 +371,15 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
     #     return Rates
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
         Rates = []
+        if G.nodes[0]['infected'] == True:
+            Rates.append(Alpha)
+        else:
+            Rates.append(len(infected_neighbors[0]) * fun(Total_time+dt))
         for i in range(G.number_of_nodes()):
             if G.nodes[i]['infected'] == True:
-                Rates.append(Alpha)
+                Rates.append(Rates[-1] +Alpha)
             else:
-                Rates.append(len(infected_neghibors[i])*fun(Total_time+dt))
+                Rates.append(len(Rates[-1] +infected_neghibors[i])*fun(Total_time+dt))
         return Rates
 
     G=nx.read_gpickle(infile)
@@ -430,9 +434,11 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
                 for Neighbor in G[person]:
                     # G.nodes[Neighbor]['infected_neghibors'].remove(person)
                     infected_neighbors[Neighbor].remove(person)
+                    SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
             elif G.nodes[person]['infected'] == False:
                 Num_inf = Num_inf + 1
                 G.nodes[person]['infected'] = True
+                SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
                 for Neighbor in G[person]:
                     # G.nodes[Neighbor]['infected_neghibors'].add(person)
                     infected_neighbors[Neighbor].add(person)
@@ -473,11 +479,15 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
     #     return Rates
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
         Rates = []
-        for i in range(G.number_of_nodes()):
-            if G.nodes[i]['infected'] == True:
-                Rates.append(Alpha)
+        if G.nodes[0]['infected'] == True:
+            Rates.append(Alpha)
+        else:
+            Rates.append(len(infected_neghibors[0])*fun(Total_time+dt))
+        for i in range(G.number_of_nodes()-1):
+            if G.nodes[i+1]['infected'] == True:
+                Rates.append(Rates[-1] + Alpha)
             else:
-                Rates.append(len(infected_neghibors[i])*fun(Total_time+dt))
+                Rates.append(Rates[-1] + len(infected_neghibors[i+1])*fun(Total_time+dt))
         return Rates
 
 
@@ -521,11 +531,13 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
                 Num_inf = Num_inf - 1
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].remove(person)
+                    SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
             else:
                 Num_inf = Num_inf + 1
                 G.nodes[person]['infected'] = True
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].add(person)
+                    SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
             count = count + 1
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))
@@ -979,7 +991,7 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='gauss_c'
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.5
+    Lam = 1.6
     Time_limit = 200
     Start_recording_time = 50
     Beta_avg = Lam / k
@@ -1059,8 +1071,8 @@ def actasmain():
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
-    temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    # temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
+    # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
+    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
