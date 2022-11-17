@@ -6,6 +6,7 @@ import netinithomo
 import rand_networks
 import csv
 import pickle
+import dt_eq_table
 
 if __name__ == '__main__':
     Epsilon_sus = [0.0]
@@ -37,9 +38,11 @@ if __name__ == '__main__':
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
-    rate_type ='s'
+    rate_type = 's'
+    table_size_random,table_size_time = 10, 10
     amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
+
 
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
@@ -268,6 +271,7 @@ if __name__ == '__main__':
                           str(Num_inital_conditions)+ ' ' + str(Num_inf) + ' ' +str(n)+ ' ' +str(Beta) +
                           ' ' + str(factor) + ' ' + str(duration) + ' ' + str(time_q) + ' ' + str(beta_time_type))
     elif prog =='th':
+
         for n in range(Num_different_networks):
             if rate_type=='c':
                 with open('parmeters.npy','wb') as f:
@@ -287,13 +291,14 @@ if __name__ == '__main__':
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' +str(Num_inf) + ' ' + str(n) +
                           ' ' + str(Start_recording_time) + ' ' + str(rate_type))
     elif prog == 'thx':
+        if rate_type == 'c':
+            with open('parmeters.npy', 'wb') as f:
+                np.save(f, np.array[Beta_avg])
+        elif rate_type == 's':
+            with open('parmeters.npy', 'wb') as f:
+                np.save(f, np.array([Beta_avg, amplitude, frequency]))
+        dt_eq_table.create_table(table_size_time,table_size_random,rate_type,Alpha,N,k)
         for n in range(Num_different_networks):
-            if rate_type == 'c':
-                with open('parmeters.npy', 'wb') as f:
-                    np.save(f, np.array[Beta_avg])
-            elif rate_type == 's':
-                with open('parmeters.npy', 'wb') as f:
-                    np.save(f, np.array([Beta_avg, amplitude, frequency]))
             # G = nx.random_regular_graph(k, N)
             G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)
@@ -302,6 +307,5 @@ if __name__ == '__main__':
             outfile = 'o' + str(Lam).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
-                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
-                          str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
-                          ' ' + str(n)  + ' ' + str(rate_type))
+                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' + str(infile) + ' ' +
+                          str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type)  + ' ' + str(dir_path))

@@ -19,6 +19,13 @@ def temporal_change_function(rate_type):
     return fun,end_time
 
 
+def cycle_time(rate_type):
+    if rate_type == 'c':
+        return lambda t: t
+    elif rate_type == 's':
+        return lambda t:t%(2*np.pi)
+
+
 def dt_eq(fun,Num_inf,Alpha,SI_connections,Total_time,r):
     integrand = lambda t: Num_inf * Alpha + SI_connections * fun(t+Total_time)
     integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
@@ -50,7 +57,7 @@ def intalize_table(fun, N, k0, size_r, num_time, Alpha, time_vec, r_vec):
     return table
 
 
-def search_table_for_tau(n,si,r,time,time_vec,r_vec):
+def search_table_for_tau(table,n,si,r,time,time_vec,r_vec):
         t_pos = bisect.bisect_left(time_vec, time)
         r_pos = bisect.bisect_left(r_vec, r)
         return table[si][n][t_pos][r_pos]
@@ -61,13 +68,17 @@ def continous_vec(size_t,size_r,end_time):
     r_vec = np.linspace(0.0,1.0,size_r)
     return time_vec,r_vec
 
-def create_table(size_t,size_r,rate_type,Alpha):
+def create_table(size_t,size_r,rate_type,Alpha,N,k0):
     fun,end_time = temporal_change_function(rate_type)
     time_vec,r_vec = continous_vec(size_t, size_r, end_time)
     table = intalize_table(fun, N, k0, size_r, size_t, Alpha, time_vec, r_vec)
     with open('table.npy', 'wb') as f:
         np.save(f, table)
-    return table
+    with open('tinx.npy', 'wb') as f:
+        np.save(f, time_vec)
+    with open('rinx.npy', 'wb') as f:
+        np.save(f, r_vec)
+    return 0
 
 
 

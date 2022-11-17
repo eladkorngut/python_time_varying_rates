@@ -9,7 +9,7 @@ import rand_networks
 from scipy.integrate import quad
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
-import dill
+import dt_eq_table
 import warnings
 warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 
@@ -462,7 +462,7 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
 
 
 
-def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
+def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,dir_path):
 
     # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
     #     Rates = []
@@ -492,12 +492,16 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 
     G=nx.read_gpickle(infile)
+    tinx = np.load(dir_path + '/' + 'tinx.npy')
+    rinx = np.load(dir_path + '/' + 'rinx.npy')
+    fun_time =dt_eq_table.cycle_time(rate_type)
     if rate_type=='c':
-        Beta = float(np.load('parmeters.npy'))
+        Beta = float(np.load(dir_path + '/' + 'parmeters.npy'))
         fun = lambda t:Beta
     elif rate_type=='s':
-        Beta,amplitude,frequency = np.load('parmeters.npy')
+        Beta,amplitude,frequency = np.load(dir_path + '/' + 'parmeters.npy')
         fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
+    table = np.load(dir_path + '/' + 'table.npy')
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -509,10 +513,9 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         # Main Gillespie Loop
         ######################
         while Num_inf > 0:
-            integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
-            integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
-            fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
-            tau = float(fsolve(fun_rand_time, 1.0))
+            t_pos = bisect.bisect_left(tinx, fun_time(Total_time))
+            r_pos = bisect.bisect_left(rinx, r[count, 0])
+            tau = table[SI_connections][Num_inf][t_pos][r_pos]
             R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
             r_pos = R_norm[-1] * r[count, 1]
             person = bisect.bisect_left(R_norm, r_pos)
@@ -980,8 +983,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 100
-    k = 50
+    N = 10
+    k = 10
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1016,10 +1019,12 @@ def actasmain():
     rate_type= 's'
     amplitude,frequency=0.1,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
+    dir_path = '/home/elad/multi_contact_rate_project/python_time_varying_rates'
+    table_size_random,table_size_time = 10, 10
 
 
-    G = nx.random_regular_graph(k, N)
-    # G = nx.complete_graph(N)
+    # G = nx.random_regular_graph(k, N)
+    G = nx.complete_graph(N)
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, 0.0, 0.0, 1.0)
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
@@ -1067,12 +1072,13 @@ def actasmain():
     #                        Start_recording_time)
     if rate_type == 'c':
         with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array([Beta_avg]))
+            np.save(f, np.array[Beta_avg])
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
+    dt_eq_table.create_table(table_size_time, table_size_random, rate_type, Alpha,N,k)
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
+    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,dir_path)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
@@ -1123,4 +1129,4 @@ if __name__ == '__main__':
                                     int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
          elif sys.argv[1] == 'thx':
              temporal_direct_extinction(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
-                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],sys.argv[10])
