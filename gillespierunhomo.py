@@ -518,6 +518,15 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         while Num_inf > 0:
             t_pos = bisect.bisect_left(tinx, fun_time(Total_time))
             r_pos = bisect.bisect_left(rinx, r[count, 0])
+            try:
+                table[SI_connections][Num_inf][t_pos][r_pos]
+            except:
+                  print('Accessing table[SI_connections][Num_inf][t_pos][r_pos] failed value of t_pos is ',t_pos)
+                  if t_pos == len(tinx):
+                      t_pos = t_pos - 1
+                  elif r_pos == len(rinx):
+                      r_pos = r_pos - 1
+
             tau = table[SI_connections][Num_inf][t_pos][r_pos]
             R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
             r_pos = R_norm[-1] * r[count, 1]
