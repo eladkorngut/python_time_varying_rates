@@ -493,18 +493,18 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 
     G=nx.read_gpickle(infile)
-    path = os.getcwd()
-    parent_directory = os.path.abspath(os.path.join(path, os.pardir))
-    tinx = np.load(parent_directory + '/' + 'tinx.npy')
-    rinx = np.load(parent_directory + '/' + 'rinx.npy')
+    # path = os.getcwd()
+    # parent_directory = os.path.abspath(os.path.join(path, os.pardir))
+    tinx = np.load('tinx.npy')
+    rinx = np.load('rinx.npy')
     fun_time =dt_eq_table.cycle_time(rate_type)
     if rate_type=='c':
-        Beta = float(np.load(parent_directory + '/' + 'parmeters.npy'))
+        Beta = float(np.load('parmeters.npy'))
         fun = lambda t:Beta
     elif rate_type=='s':
-        Beta,amplitude,frequency = np.load(parent_directory + '/' + 'parmeters.npy')
+        Beta,amplitude,frequency = np.load('parmeters.npy')
         fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
-    table = np.load(parent_directory + '/' + 'table.npy')
+    table = np.load('table.npy')
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
