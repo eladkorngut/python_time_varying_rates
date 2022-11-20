@@ -48,9 +48,9 @@ def dt_eq(fun,Num_inf,Alpha,SI_connections,Total_time,r):
 
 
 def intalize_table(fun, N, k0, size_r, num_time, Alpha, time_vec, r_vec):
-    table = np.empty([N*k0,N,num_time,size_r])
+    table = np.empty([N*k0,N+1,num_time,size_r])
     for si in range(N*k0):
-        for inf in range(N):
+        for inf in range(N+1):
             for time in range(num_time):
                 for r in range(size_r):
                     table[si][inf][time][r]=dt_eq(fun, inf,Alpha, si, time_vec[time], r_vec[r])
