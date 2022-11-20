@@ -308,4 +308,4 @@ if __name__ == '__main__':
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' + str(infile) + ' ' +
-                          str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type)  + ' ' + str(dir_path))
+                          str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type))

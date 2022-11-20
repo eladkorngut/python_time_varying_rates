@@ -5,6 +5,7 @@ import networkx as nx
 import csv
 import pickle
 import sys
+import os
 import rand_networks
 from scipy.integrate import quad
 from scipy.optimize import fsolve
@@ -462,7 +463,7 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
 
 
 
-def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,dir_path):
+def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
 
     # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
     #     Rates = []
@@ -492,16 +493,18 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 
     G=nx.read_gpickle(infile)
-    tinx = np.load(dir_path + '/' + 'tinx.npy')
-    rinx = np.load(dir_path + '/' + 'rinx.npy')
+    path = os.getcwd()
+    parent_directory = os.path.abspath(os.path.join(path, os.pardir))
+    tinx = np.load(parent_directory + '/' + 'tinx.npy')
+    rinx = np.load(parent_directory + '/' + 'rinx.npy')
     fun_time =dt_eq_table.cycle_time(rate_type)
     if rate_type=='c':
-        Beta = float(np.load(dir_path + '/' + 'parmeters.npy'))
+        Beta = float(np.load(parent_directory + '/' + 'parmeters.npy'))
         fun = lambda t:Beta
     elif rate_type=='s':
-        Beta,amplitude,frequency = np.load(dir_path + '/' + 'parmeters.npy')
+        Beta,amplitude,frequency = np.load(parent_directory + '/' + 'parmeters.npy')
         fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
-    table = np.load(dir_path + '/' + 'table.npy')
+    table = np.load(parent_directory + '/' + 'table.npy')
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -1078,7 +1081,7 @@ def actasmain():
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
     dt_eq_table.create_table(table_size_time, table_size_random, rate_type, Alpha,N,k)
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,dir_path)
+    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
@@ -1089,7 +1092,7 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = False
+    submit = True
     if submit==True:
         actasmain()
     else:
@@ -1129,4 +1132,4 @@ if __name__ == '__main__':
                                     int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
          elif sys.argv[1] == 'thx':
              temporal_direct_extinction(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
-                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],sys.argv[10])
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
