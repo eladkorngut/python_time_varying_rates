@@ -3,6 +3,11 @@ import bisect
 from scipy.integrate import quad
 from scipy.optimize import fsolve
 import warnings
+import sys
+import networkx as nx
+import netinithomo
+import os
+
 warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 
 
@@ -80,9 +85,7 @@ def create_table(size_t,size_r,rate_type,Alpha,N,k0):
         np.save(f, r_vec)
     return 0
 
-
-
-if __name__ == '__main__':
+def actasmain():
     N = 20
     k0 = 4
     size_r = 10
@@ -91,4 +94,39 @@ if __name__ == '__main__':
     Alpha = 1.0
     table = create_table(size_t, size_r, rate_type, Alpha)
     print('This no love song')
+
+
+if __name__ == '__main__':
+    submit = False
+    if submit == True:
+        actasmain()
+    elif sys.argv[1] == 'thx':
+        prog = sys.argv[1]
+        size_t = int(sys.argv[2])
+        size_r = int(sys.argv[3])
+        rate_type = sys.argv[4]
+        Alpha = float(sys.argv[6])
+        N = int(sys.argv[7])
+        k0 = int(sys.argv[8])
+        Num_different_networks = int(sys.argv[9])
+        graphname = sys.argv[10]
+        Lam = float(sys.argv[11])
+        dir_path = sys.argv[12]
+        parts = int(sys.argv[13])
+        bank = int(sys.argv[14])
+        Num_inf = int(sys.argv[15])
+        Num_inital_conditions = int(sys.argv[16])
+        create_table(size_t, size_r, rate_type,Alpha, N, k0)
+        for n in range(Num_different_networks):
+            # G = nx.random_regular_graph(k, N)
+            G = nx.complete_graph(N)
+            G = netinithomo.intalize_homo_temporal_graph(G)
+            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
+            nx.write_gpickle(G, infile)
+            outfile = 'o' + str(Lam).replace('.', '')
+            for p in range(parts):
+                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' + str(infile) + ' ' +
+                          str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type))
+
 

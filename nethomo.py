@@ -1,6 +1,5 @@
 import os
 import networkx as nx
-import numpy
 import numpy as np
 import netinithomo
 import rand_networks
@@ -297,15 +296,27 @@ if __name__ == '__main__':
         elif rate_type == 's':
             with open('parmeters.npy', 'wb') as f:
                 np.save(f, np.array([Beta_avg, amplitude, frequency]))
-        dt_eq_table.create_table(table_size_time,table_size_random,rate_type,Alpha,N,k)
-        for n in range(Num_different_networks):
-            # G = nx.random_regular_graph(k, N)
-            G = nx.complete_graph(N)
-            G = netinithomo.intalize_homo_temporal_graph(G)
-            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
-            nx.write_gpickle(G, infile)
-            outfile = 'o' + str(Lam).replace('.', '')
-            for p in range(parts):
-                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
-                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' + str(infile) + ' ' +
-                          str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type))
+        os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/dt_eq_table.py ' + str(prog) + ' ' +
+                  str(table_size_time) + ' ' + str(table_size_random) + ' ' + str(rate_type) + ' ' +
+                  str(Alpha) + ' ' + str(N) + ' ' + str(k) + ' ' + str(Num_different_networks) + ' ' +
+                  str(graphname) + ' ' + str(Lam) + ' ' + str(dir_path) + ' ' + str(parts) + ' ' + str(bank) + ' ' +
+                  str(Num_inf)+ ' ' + str(Num_inital_conditions))
+    # elif prog == 'thx':
+    #     if rate_type == 'c':
+    #         with open('parmeters.npy', 'wb') as f:
+    #             np.save(f, np.array[Beta_avg])
+    #     elif rate_type == 's':
+    #         with open('parmeters.npy', 'wb') as f:
+    #             np.save(f, np.array([Beta_avg, amplitude, frequency]))
+    #     dt_eq_table.create_table(table_size_time,table_size_random,rate_type,Alpha,N,k)
+    #     for n in range(Num_different_networks):
+    #         # G = nx.random_regular_graph(k, N)
+    #         G = nx.complete_graph(N)
+    #         G = netinithomo.intalize_homo_temporal_graph(G)
+    #         infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
+    #         nx.write_gpickle(G, infile)
+    #         outfile = 'o' + str(Lam).replace('.', '')
+    #         for p in range(parts):
+    #             os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+    #                       str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' + str(infile) + ' ' +
+    #                       str(Num_inital_conditions) + ' ' + str(Num_inf) + ' ' + str(n)  + ' ' + str(rate_type))
