@@ -13,8 +13,8 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 10
-    k = 10
+    N = 30
+    k = 30
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 5.0
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     Num_inital_conditions= 30
     bank = 1000000
     parts = 1
-    foldername ='extinction_cos_beta_net20_init30_lam4_alpha5_epsilon08_freq1_N10_k10'
+    foldername ='extinction_cos_beta_sizet100_sizer100_net20_init30_lam4_alpha5_epsilon08_freq1_N30_k30'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
     rate_type = 's'
-    table_size_random,table_size_time = 10, 10
+    table_size_random,table_size_time = 100, 100
     amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 

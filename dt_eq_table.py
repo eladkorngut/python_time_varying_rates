@@ -105,17 +105,17 @@ if __name__ == '__main__':
         size_t = int(sys.argv[2])
         size_r = int(sys.argv[3])
         rate_type = sys.argv[4]
-        Alpha = float(sys.argv[6])
-        N = int(sys.argv[7])
-        k0 = int(sys.argv[8])
-        Num_different_networks = int(sys.argv[9])
-        graphname = sys.argv[10]
-        Lam = float(sys.argv[11])
-        dir_path = sys.argv[12]
-        parts = int(sys.argv[13])
-        bank = int(sys.argv[14])
-        Num_inf = int(sys.argv[15])
-        Num_inital_conditions = int(sys.argv[16])
+        Alpha = float(sys.argv[5])
+        N = int(sys.argv[6])
+        k0 = int(sys.argv[7])
+        Num_different_networks = int(sys.argv[8])
+        graphname = sys.argv[9]
+        Lam = float(sys.argv[10])
+        dir_path = sys.argv[11]
+        parts = int(sys.argv[12])
+        bank = int(sys.argv[13])
+        Num_inf = int(sys.argv[14])
+        Num_inital_conditions = int(sys.argv[15])
         create_table(size_t, size_r, rate_type,Alpha, N, k0)
         for n in range(Num_different_networks):
             # G = nx.random_regular_graph(k, N)
