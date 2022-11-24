@@ -70,7 +70,7 @@ def search_table_for_tau(table,n,si,r,time,time_vec,r_vec):
 
 def continous_vec(size_t,size_r,end_time):
     time_vec = np.linspace(0.0,end_time,size_t)
-    r_vec = np.linspace(0.0,1.0,size_r)
+    r_vec = np.logspace(-8,0.0,size_r)
     return time_vec,r_vec
 
 def create_table(size_t,size_r,rate_type,Alpha,N,k0):
@@ -88,11 +88,11 @@ def create_table(size_t,size_r,rate_type,Alpha,N,k0):
 def actasmain():
     N = 20
     k0 = 4
-    size_r = 10
-    size_t = 10
+    size_r = 100
+    size_t = 100
     rate_type = 's'
     Alpha = 1.0
-    table = create_table(size_t, size_r, rate_type, Alpha)
+    table = create_table(size_t, size_r, rate_type, Alpha,N,k0)
     print('This no love song')
 
 
