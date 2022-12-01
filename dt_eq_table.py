@@ -32,7 +32,7 @@ def cycle_time(rate_type):
 
 
 def dt_eq(fun,Num_inf,Alpha,SI_connections,Total_time,r):
-    integrand = lambda t: Num_inf * Alpha + SI_connections * fun(t+Total_time)
+    integrand = lambda t: Num_inf * Alpha + SI_connections * fun(t)
     integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
     fun_rand_time = lambda t: integral_fun_t(t) + np.log(r)
     tau = float(fsolve(fun_rand_time, 1.0))
@@ -71,6 +71,7 @@ def search_table_for_tau(table,n,si,r,time,time_vec,r_vec):
 def continous_vec(size_t,size_r,end_time):
     time_vec = np.linspace(0.0,end_time,size_t)
     r_vec = np.logspace(-8,0.0,size_r)
+    # r_vec = np.linspace(0.0,1.0,size_r)
     return time_vec,r_vec
 
 def create_table(size_t,size_r,rate_type,Alpha,N,k0):
@@ -86,12 +87,12 @@ def create_table(size_t,size_r,rate_type,Alpha,N,k0):
     return 0
 
 def actasmain():
-    N = 20
-    k0 = 4
+    N = 35
+    k0 = 35
     size_r = 100
     size_t = 100
     rate_type = 's'
-    Alpha = 1.0
+    Alpha = 4.0
     table = create_table(size_t, size_r, rate_type, Alpha,N,k0)
     print('This no love song')
 

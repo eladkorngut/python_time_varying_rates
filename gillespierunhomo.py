@@ -516,8 +516,10 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         # Main Gillespie Loop
         ######################
         while Num_inf > 0:
-            t_pos = bisect.bisect_left(tinx, fun_time(Total_time))
-            r_pos = bisect.bisect_left(rinx, r[count, 0])
+            t_pos_org = bisect.bisect_left(tinx, fun_time(Total_time))
+            t_pos = t_pos_org if np.abs(tinx[t_pos_org]-fun_time(Total_time))<np.abs(tinx[t_pos_org-1]-fun_time(Total_time)) else t_pos_org-1
+            r_pos_org = bisect.bisect_left(rinx, r[count, 0])
+            r_pos = r_pos_org if np.abs(rinx[r_pos_org] - r[count, 0])<np.abs(rinx[r_pos_org-1]-r[count, 0]) else r_pos_org-1
             try:
                 table[SI_connections][Num_inf][t_pos][r_pos]
             except:
@@ -995,18 +997,18 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 10
-    k = 10
+    N = 35
+    k = 35
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
     Num_inf = int(x * N)
-    Alpha = 1.0
+    Alpha = 5.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='gauss_c'
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.6
+    Lam = 4.0
     Time_limit = 200
     Start_recording_time = 50
     Beta_avg = Lam / k
@@ -1032,7 +1034,7 @@ def actasmain():
     amplitude,frequency=0.1,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
     dir_path = '/home/elad/multi_contact_rate_project/python_time_varying_rates'
-    table_size_random,table_size_time = 10, 10
+    table_size_random,table_size_time = 100, 100
 
 
     # G = nx.random_regular_graph(k, N)
@@ -1082,13 +1084,13 @@ def actasmain():
     # fluctuation_run_extinction(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,1,Beta)
     # first_reaction_run_sis(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n,
     #                        Start_recording_time)
-    if rate_type == 'c':
-        with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array[Beta_avg])
-    elif rate_type == 's':
-        with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array([Beta_avg, amplitude, frequency]))
-    dt_eq_table.create_table(table_size_time, table_size_random, rate_type, Alpha,N,k)
+    # if rate_type == 'c':
+    #     with open('parmeters.npy', 'wb') as f:
+    #         np.save(f, np.array[Beta_avg])
+    # elif rate_type == 's':
+    #     with open('parmeters.npy', 'wb') as f:
+    #         np.save(f, np.array([Beta_avg, amplitude, frequency]))
+    # dt_eq_table.create_table(table_size_time, table_size_random, rate_type, Alpha,N,k)
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
 
