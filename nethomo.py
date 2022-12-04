@@ -13,37 +13,37 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 10
-    k = 10
+    N = 500
+    k = 100
     x = 0.2
     Num_inf = int(x * N)
-    Alpha = 5.0
+    Alpha = 1.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='uniform_c'
-    prog = 'thx' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 4.0
+    prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    Lam = 1.3
     Time_limit = 1100
     Start_recording_time = 100
     Beta_avg = Alpha*Lam / k
-    Num_different_networks= 20
-    Num_inital_conditions= 30
+    Num_different_networks= 10
+    Num_inital_conditions= 100
     bank = 1000000
     parts = 1
-    foldername ='extinction_cos_beta_net20_init30_lam4_alpha5_epsilon08_freq1_N10_k10'
+    foldername ='cat_N500_k500_net10_init100_lam13_duration50_start100_end1100_alpha1_amp08'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q,beta_time_type = 0.75, 10.0, 100.0,'c'
-    rate_type ='s'
+    factor, duration, time_q,beta_time_type = 0.8, 50.0, 100.0,'c'
+    rate_type ='ca'
     amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
-            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx':
+            prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx' or prog=='thr':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
@@ -294,6 +294,31 @@ if __name__ == '__main__':
             elif rate_type == 's':
                 with open('parmeters.npy', 'wb') as f:
                     np.save(f, np.array([Beta_avg, amplitude, frequency]))
+            elif rate_type=='ca':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
+            # G = nx.random_regular_graph(k, N)
+            G = nx.complete_graph(N)
+            G = netinithomo.intalize_homo_temporal_graph(G)
+            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
+            nx.write_gpickle(G, infile)
+            outfile = 'o' + str(Lam).replace('.', '')
+            for p in range(parts):
+                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
+                          str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
+                          ' ' + str(n)  + ' ' + str(rate_type))
+    elif prog == 'thr':
+        for n in range(Num_different_networks):
+            if rate_type == 'c':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array[Beta_avg])
+            elif rate_type == 's':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array([Beta_avg, amplitude, frequency]))
+            elif rate_type=='ca':
+                with open('parmeters.npy', 'wb') as f:
+                    np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
             # G = nx.random_regular_graph(k, N)
             G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)

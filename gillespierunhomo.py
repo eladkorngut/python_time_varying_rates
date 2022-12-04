@@ -492,12 +492,17 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 
     G=nx.read_gpickle(infile)
+
     if rate_type=='c':
         Beta = float(np.load('parmeters.npy'))
         fun = lambda t:Beta
     elif rate_type=='s':
         Beta,amplitude,frequency = np.load('parmeters.npy')
         fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
+    elif rate_type == 'ca':
+        time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
+        fun = lambda Total_time: beta_factor if Total_time > time_q and Total_time <= time_q + duration else beta_org
+
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -546,6 +551,90 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         with f:
             writer = csv.writer(f)
             writer.writerows([[Total_time,network_number]])
+        f.close()
+    return 0
+
+
+
+def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
+
+    def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
+        Rates = []
+        if G.nodes[0]['infected'] == True:
+            Rates.append(Alpha)
+        else:
+            Rates.append(len(infected_neghibors[0])*fun(Total_time+dt))
+        for i in range(G.number_of_nodes()-1):
+            if G.nodes[i+1]['infected'] == True:
+                Rates.append(Rates[-1] + Alpha)
+            else:
+                Rates.append(Rates[-1] + len(infected_neghibors[i+1])*fun(Total_time+dt))
+        return Rates
+
+    G=nx.read_gpickle(infile)
+
+    if rate_type=='c':
+        Beta = float(np.load('parmeters.npy'))
+        fun = lambda t:Beta
+    elif rate_type=='s':
+        Beta,amplitude,frequency = np.load('parmeters.npy')
+        fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
+    elif rate_type == 'ca':
+        time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
+        fun = lambda Total_time: beta_factor if Total_time > time_q and Total_time <= time_q + duration else beta_org
+
+    seed_nodes = Num_inf
+    for run_loop_counter in range(runs):
+        T,I,runs_csv,net_num = [],[],[],[]
+        net_num.append(network_number)
+        Total_time = 0.0
+        T.append(Total_time)
+        count = 0
+        Num_inf = seed_nodes
+        I.append(Num_inf)
+        r = np.random.uniform(0, 1, (bank, 2))
+        SI_connections,infected_neighbors = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
+        ######################
+        # Main Gillespie Loop
+        ######################
+        while Num_inf > 0:
+            integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
+            integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
+            fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
+            tau = float(fsolve(fun_rand_time, 1.0))
+            R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
+            r_pos = R_norm[-1] * r[count, 1]
+            person = bisect.bisect_left(R_norm, r_pos)
+            Total_time = Total_time + tau
+
+            try:
+                if G.nodes[person]['infected'] == True:
+                  pass
+            except:
+                  print('Accessing G.noes[person][infected] failed value of person is ',person)
+                  if person == G.number_of_nodes():
+                      person =G.number_of_nodes()-1
+
+            if G.nodes[person]['infected'] == True:
+                G.nodes[person]['infected'] = False
+                Num_inf = Num_inf - 1
+                for Neighbor in G[person]:
+                    infected_neighbors[Neighbor].remove(person)
+                    SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
+            else:
+                Num_inf = Num_inf + 1
+                G.nodes[person]['infected'] = True
+                for Neighbor in G[person]:
+                    infected_neighbors[Neighbor].add(person)
+                    SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
+            count = count + 1
+            if count >= bank:
+                r = np.random.uniform(0, 1, (bank, 2))
+                count = 0
+        f = open(outfile + '.csv', "a+")
+        with f:
+            writer = csv.writer(f)
+            writer.writerows([[Total_time,network_number,Num_inf]])
         f.close()
     return 0
 
@@ -1123,4 +1212,7 @@ if __name__ == '__main__':
                                     int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
          elif sys.argv[1] == 'thx':
              temporal_direct_extinction(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
+         elif sys.argv[1] == 'thr':
+             temporal_direct_run(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
