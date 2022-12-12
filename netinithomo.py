@@ -45,6 +45,11 @@ def intalize_homo_temporal_graph(G):
     # nx.set_node_attributes(G, set(),'infected_neghibors')
     return G
 
+def intalize_bimodal_temporal_graph(G):
+    nx.set_node_attributes(G, False, 'infected')
+    nx.set_node_attributes(G,0,'type')
+    # nx.set_node_attributes(G, set(),'infected_neghibors')
+    return G
 
 def set_graph_attriubute_DiGraph(G):
     nx.set_node_attributes(G, False, 'infected')
@@ -69,8 +74,11 @@ def inatlize_inf_graph(G,Num_inf,N,Alpha,Beta):
 def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
     for i in rand.sample(range(0, N - 1), Num_inf):
         G.nodes[i]['infected'] = True
+    for i in rand.sample(range(0, N - 1), N/2):
+        G.nodes[i]['type'] = 1
     nx.set_node_attributes(G, fun, 'rate')
-    SI_connections = 0
+    # SI_connections = 0
+    SI_connections = np.array([0,0])
     infected_neighbors =[]
     for i in range(N):
         infected_neighbors.append(set())
@@ -80,7 +88,7 @@ def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
                 # G.nodes[i]['infected_neghibors'].add(l)
                 infected_neighbors[i].add(l)
                 if G.nodes[i]['infected'] == False:
-                    SI_connections = SI_connections + 1
+                    SI_connections[G.nodes[l]['type']] = SI_connections[G.nodes[l]['type']] + 1
     return SI_connections,infected_neighbors
 
 

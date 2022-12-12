@@ -502,7 +502,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
     elif rate_type == 'ca':
         time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
         fun = lambda Total_time: beta_factor if Total_time > time_q and Total_time <= time_q + duration else beta_org
-
+    table = np.load('table.npy')
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -514,10 +514,11 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         # Main Gillespie Loop
         ######################
         while Num_inf > 0:
-            integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
-            integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
-            fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
-            tau = float(fsolve(fun_rand_time, 1.0))
+            # integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
+            # integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
+            # fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
+            # tau = float(fsolve(fun_rand_time, 1.0))
+            # tau = table[]
             R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
             r_pos = R_norm[-1] * r[count, 1]
             person = bisect.bisect_left(R_norm, r_pos)
@@ -620,13 +621,13 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
                 Num_inf = Num_inf - 1
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].remove(person)
-                    SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
+                    SI_connections[G.nodes[person]['type']] = SI_connections[G.nodes[person]['type']]+1 if G.nodes[Neighbor]['infected']==True else SI_connections[G.nodes[person]['type']] - 1
             else:
                 Num_inf = Num_inf + 1
                 G.nodes[person]['infected'] = True
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].add(person)
-                    SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
+                    SI_connections[G.nodes[person]['type']] = SI_connections[G.nodes[person]['type']] - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections[G.nodes[person]['type']] + 1
             count = count + 1
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))

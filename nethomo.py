@@ -5,6 +5,9 @@ import numpy as np
 import netinithomo
 import rand_networks
 import csv
+from scipy.integrate import quad
+from scipy.optimize import fsolve
+from scipy.integrate import quad_vec
 import pickle
 
 if __name__ == '__main__':
@@ -13,15 +16,15 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 500
-    k = 100
+    N = 10
+    k = 10
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='uniform_c'
-    prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    prog = 'thx' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.3
     Time_limit = 1100
     Start_recording_time = 100
@@ -37,7 +40,7 @@ if __name__ == '__main__':
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.8, 50.0, 100.0,'c'
-    rate_type ='ca'
+    rate_type ='s'
     amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
@@ -287,6 +290,13 @@ if __name__ == '__main__':
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' +str(Num_inf) + ' ' + str(n) +
                           ' ' + str(Start_recording_time) + ' ' + str(rate_type))
     elif prog == 'thx':
+
+        # def cycle_time(rate_type):
+        #     if rate_type == 'c':
+        #         return lambda t: t
+        #     elif rate_type == 's':
+        #         return lambda t: t % (2 * np.pi)
+
         for n in range(Num_different_networks):
             if rate_type == 'c':
                 with open('parmeters.npy', 'wb') as f:
@@ -299,6 +309,34 @@ if __name__ == '__main__':
                     np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
             # G = nx.random_regular_graph(k, N)
             G = nx.complete_graph(N)
+            inf = np.arange(N+1)
+            r = np.logspace(-8,0,10)
+            # SI_connections = np.arange(N*k)
+            SI_connections1 = np.arange(N*k/2)
+            SI_connections2 = np.arange(N*k/2)
+            if rate_type == 'c':
+                # fun = lambda t: Beta_avg
+                time_range = np.array([Time_limit])
+                [si1, si2, idx, rand_num, time_range_index] = np.meshgrid(SI_connections1, SI_connections2, inf, r,
+                                                                    time_range)
+                fun = lambda t: (Alpha*idx+si1*Beta_avg*(1-epsilon)+si2*Beta_avg*(1+epsilon))*t+np.log(rand_num)
+            elif rate_type == 's':
+                time_range = np.linspace(0,2*np.pi,10)
+                [si1, si2, idx, rand_num, time_range_index] = np.meshgrid(SI_connections1, SI_connections2, inf, r,
+                                                                    time_range)
+                fun = lambda t:si1*Beta_avg*(1-epsilon)*t + idx*Alpha*t +(amplitude*frequency*si1*
+                    Beta_avg*(1-epsilon)*(-np.sin((2*np.pi*time_range_index)/frequency) + np.sin((2*np.pi*(time_range_index + t))/frequency)))/(2*np.pi) +\
+                    si2*Beta_avg*(1+epsilon)*t + idx*Alpha*t +(amplitude*frequency*si2*Beta_avg*
+                   (1+epsilon)*(-np.sin((2*np.pi*time_range_index)/frequency) + np.sin((2*np.pi*(time_range_index + t))/frequency)))/(2.*np.pi) + np.log(rand_num)
+                # fun = lambda t: Alpha*inf*t + Beta_avg*(1-epsilon) * (1 + amplitude * np.cos(2 * np.pi * t / frequency))
+            elif rate_type == 'ca':
+                time_range = np.array([0.0,Start_recording_time+duration,Time_limit])
+                [si1, si2, idx, rand_num, time_range_index] = np.meshgrid(SI_connections1, SI_connections2, inf, r,
+                                                                    time_range)
+                fun = lambda t: (Alpha*idx+Beta_avg*(np.ones(np.size(time_range_index))-np.heaviside(time_range_index,time_q))*(si1*(1-epsilon)+si2*(1+epsilon)))*t+np.log(rand_num)
+            tau = float(fsolve(fun, 1.0))
+            with open('table.npy', 'wb') as f:
+                np.save(f, tau)
             G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
             nx.write_gpickle(G, infile)
