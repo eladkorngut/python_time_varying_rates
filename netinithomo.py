@@ -79,9 +79,10 @@ def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
     nx.set_node_attributes(G, fun, 'rate')
     # SI_connections = 0
     SI_connections = np.array([0,0])
-    infected_neighbors =[]
-    for i in range(N):
-        infected_neighbors.append(set())
+    # infected_neighbors =[]
+    infected_neighbors =[set()]*N
+    # for i in range(N):
+    #     infected_neighbors.append(set())
     for l in range(N):
         if G.nodes[l]['infected'] == True:
             for i in G[l]:

@@ -1,3 +1,4 @@
+import numpy
 import numpy as np
 import bisect
 import netinithomo
@@ -462,37 +463,23 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
 
 
 
-def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
+def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,low):
 
-    # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-    #     Rates = []
-    #     integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
-    #     if G.nodes[0]['infected'] == True:
-    #         Rates.append(Alpha*dt)
-    #     else:
-    #         Rates.append(len(infected_neighbors[0]) * integral_fun_t)
-    #     for i in range(1,G.number_of_nodes()):
-    #         if G.nodes[i]['infected'] == True:
-    #             Rates.append(Rates[-1] + Alpha*dt)
-    #         else:
-    #             Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
-    #     return Rates
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-        Rates = []
+        Rates = numpy.empty(G.number_of_nodes()-1)
         if G.nodes[0]['infected'] == True:
-            Rates.append(Alpha)
+            Rates[0] = Alpha
         else:
-            Rates.append(len(infected_neghibors[0])*fun(Total_time+dt))
+            Rates[0] = (len(infected_neghibors[0])*fun(Total_time+dt))
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
-                Rates.append(Rates[-1] + Alpha)
+                Rates[i+1] = Rates[i] + Alpha
             else:
-                Rates.append(Rates[-1] + len(infected_neghibors[i+1])*fun(Total_time+dt))
+                Rates[i+1]= Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
-
-    G=nx.read_gpickle(infile)
-
+    l = (bank - 1) / low
+    G = nx.read_gpickle(infile)
     if rate_type=='c':
         Beta = float(np.load('parmeters.npy'))
         fun = lambda t:Beta
@@ -502,6 +489,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
     elif rate_type == 'ca':
         time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
         fun = lambda Total_time: beta_factor if Total_time > time_q and Total_time <= time_q + duration else beta_org
+        time_cycle = lambda t:
     table = np.load('table.npy')
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
@@ -509,6 +497,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         count = 0
         Num_inf = seed_nodes
         r = np.random.uniform(0, 1, (bank, 2))
+        rIndex = 1 + round(l*np.log10(1 + r(1, iter)*10^low))
         SI_connections,infected_neighbors = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
         ######################
         # Main Gillespie Loop
@@ -519,6 +508,11 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
             # fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
             # tau = float(fsolve(fun_rand_time, 1.0))
             # tau = table[]
+            # t_pos_org = bisect.bisect_left(tinx, fun_time(Total_time))
+            # t_pos = t_pos_org if np.abs(tinx[t_pos_org]-fun_time(Total_time))<np.abs(tinx[t_pos_org-1]-fun_time(Total_time)) else t_pos_org-1
+            # r_pos_org = bisect.bisect_left(rinx, r[count, 0])
+            # r_pos = r_pos_org if np.abs(rinx[r_pos_org] - r[count, 0])<np.abs(rinx[r_pos_org-1]-r[count, 0]) else r_pos_org-1
+            tau = table[SI_connections[0][SI_connections[1]][Num_inf][]
             R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
             r_pos = R_norm[-1] * r[count, 1]
             person = bisect.bisect_left(R_norm, r_pos)
@@ -1213,7 +1207,7 @@ if __name__ == '__main__':
                                     int(sys.argv[7]),int(sys.argv[8]),int(sys.argv[9]),float(sys.argv[10]),sys.argv[11])
          elif sys.argv[1] == 'thx':
              temporal_direct_extinction(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
-                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],float(sys.argv[10]))
          elif sys.argv[1] == 'thr':
              temporal_direct_run(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])

@@ -16,8 +16,9 @@ if __name__ == '__main__':
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
+    epsilon=0.0
     N = 10
-    k = 10
+    k = 4
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
@@ -33,17 +34,17 @@ if __name__ == '__main__':
     Num_inital_conditions= 100
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k500_net10_init100_lam13_duration50_start100_end1100_alpha1_amp08'
+    foldername ='temp'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.8, 50.0, 100.0,'c'
-    rate_type ='s'
+    rate_type ='ca'
     amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
-
+    max_r,low =10, 2
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx' or prog=='thr':
@@ -296,7 +297,6 @@ if __name__ == '__main__':
         #         return lambda t: t
         #     elif rate_type == 's':
         #         return lambda t: t % (2 * np.pi)
-
         for n in range(Num_different_networks):
             if rate_type == 'c':
                 with open('parmeters.npy', 'wb') as f:
@@ -310,7 +310,7 @@ if __name__ == '__main__':
             # G = nx.random_regular_graph(k, N)
             G = nx.complete_graph(N)
             inf = np.arange(N+1)
-            r = np.logspace(-8,0,10)
+            r = np.logspace(-low,0,max_r)
             # SI_connections = np.arange(N*k)
             SI_connections1 = np.arange(N*k/2)
             SI_connections2 = np.arange(N*k/2)
@@ -332,9 +332,22 @@ if __name__ == '__main__':
             elif rate_type == 'ca':
                 time_range = np.array([0.0,Start_recording_time+duration,Time_limit])
                 [si1, si2, idx, rand_num, time_range_index] = np.meshgrid(SI_connections1, SI_connections2, inf, r,
-                                                                    time_range)
-                fun = lambda t: (Alpha*idx+Beta_avg*(np.ones(np.size(time_range_index))-np.heaviside(time_range_index,time_q))*(si1*(1-epsilon)+si2*(1+epsilon)))*t+np.log(rand_num)
-            tau = float(fsolve(fun, 1.0))
+                                                                    time_range,indexing='ij')
+                # fun = lambda t: (Alpha*idx+Beta_avg*(np.ones(np.shape(time_range_index))-np.heaviside(time_range_index,time_q))*(si1*(1-epsilon)+si2*(1+epsilon)))*t+np.log(rand_num)
+                idx = idx.flatten()
+                si1 = si1.flatten()
+                si2 = si2.flatten()
+                rand_num = rand_num.flatten()
+                time_range_index = time_range_index.flatten()
+                fun = lambda t: (Alpha*idx+Beta_avg*(np.ones(np.shape(time_range_index))-np.heaviside(time_range_index,time_q))*(si1*(1-epsilon)+si2*(1+epsilon)))*t+np.log(rand_num)
+                def fun(t):
+                    temp=((Alpha*idx+Beta_avg*(np.ones(np.shape(time_range_index))-np.heaviside(time_range_index,time_q))*(si1*(1-epsilon)+si2*(1+epsilon)))*t+np.log(rand_num))
+                    return temp.flatten()
+
+            # tau = fsolve(fun, np.ones(np.shape(time_range_index)))
+            tau = fsolve(func=fun, x0= np.ones(np.shape(time_range_index)), args = np.append(C, D))
+
+            # tau = fsolve(fun,1.0)
             with open('table.npy', 'wb') as f:
                 np.save(f, tau)
             G = netinithomo.intalize_homo_temporal_graph(G)
@@ -345,7 +358,7 @@ if __name__ == '__main__':
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
-                          ' ' + str(n)  + ' ' + str(rate_type))
+                          ' ' + str(n)  + ' ' + str(rate_type)  + ' ' + str(max_r)  + ' ' + str(low))
     elif prog == 'thr':
         for n in range(Num_different_networks):
             if rate_type == 'c':
