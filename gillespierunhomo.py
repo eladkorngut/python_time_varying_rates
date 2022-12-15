@@ -464,32 +464,19 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
 
 def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
 
-    # def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-    #     Rates = []
-    #     integral_fun_t = quad(lambda t: fun(t + Total_time), Total_time, Total_time+dt)[0]
-    #     if G.nodes[0]['infected'] == True:
-    #         Rates.append(Alpha*dt)
-    #     else:
-    #         Rates.append(len(infected_neighbors[0]) * integral_fun_t)
-    #     for i in range(1,G.number_of_nodes()):
-    #         if G.nodes[i]['infected'] == True:
-    #             Rates.append(Rates[-1] + Alpha*dt)
-    #         else:
-    #             Rates.append(Rates[-1] + len(infected_neghibors[i])*integral_fun_t)
-    #     return Rates
+
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-        Rates = []
+        Rates = np.empty(G.number_of_nodes())
         if G.nodes[0]['infected'] == True:
-            Rates.append(Alpha)
+            Rates[0] = Alpha
         else:
-            Rates.append(len(infected_neghibors[0])*fun(Total_time+dt))
+            Rates[0] = len(infected_neghibors[0])*fun(Total_time+dt)
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
-                Rates.append(Rates[-1] + Alpha)
+                Rates[i+1] = Rates[i] + Alpha
             else:
-                Rates.append(Rates[-1] + len(infected_neghibors[i+1])*fun(Total_time+dt))
+                Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
-
 
     G=nx.read_gpickle(infile)
 
@@ -559,16 +546,16 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
 
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-        Rates = []
+        Rates = np.empty(G.number_of_nodes()-1)
         if G.nodes[0]['infected'] == True:
-            Rates.append(Alpha)
+            Rates[0] = Alpha
         else:
-            Rates.append(len(infected_neghibors[0])*fun(Total_time+dt))
+            Rates[0] = len(infected_neghibors[0])*fun(Total_time+dt)
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
-                Rates.append(Rates[-1] + Alpha)
+                Rates[i+1] = Rates[i] + Alpha
             else:
-                Rates.append(Rates[-1] + len(infected_neghibors[i+1])*fun(Total_time+dt))
+                Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
     G=nx.read_gpickle(infile)
