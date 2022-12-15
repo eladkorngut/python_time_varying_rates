@@ -546,7 +546,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
 
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
-        Rates = np.empty(G.number_of_nodes()-1)
+        Rates = np.empty(G.number_of_nodes())
         if G.nodes[0]['infected'] == True:
             Rates[0] = Alpha
         else:
@@ -557,6 +557,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
             else:
                 Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
+
 
     G=nx.read_gpickle(infile)
 
