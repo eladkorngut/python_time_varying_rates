@@ -329,4 +329,4 @@ if __name__ == '__main__':
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
-                          ' ' + str(n)  + ' ' + str(rate_type))
+                          ' ' + str(n)  + ' ' + str(rate_type) + ' ' + str(Time_limit)+ ' ' + str(Start_recording_time))

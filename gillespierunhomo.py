@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import dill
 import warnings
 warnings.filterwarnings('ignore', 'The iteration is not making good progress')
+from scipy.io import savemat
+
 
 
 
@@ -543,7 +545,7 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 
 
-def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type):
+def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,Time_limit,Start_recording_time):
 
     def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
         Rates = np.empty(G.number_of_nodes())
@@ -585,7 +587,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
         ######################
         # Main Gillespie Loop
         ######################
-        while Num_inf > 0:
+        while Num_inf > 0 and Total_time<Time_limit:
             integrand = lambda t: Num_inf*Alpha + SI_connections*fun(t)
             integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
             fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
@@ -619,10 +621,29 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))
                 count = 0
+            if Total_time-T[-1]>=0.1 and Total_time>=Start_recording_time:
+                I.append(Num_inf)
+                T.append(Total_time)
+                net_num.append(network_number)
+                runs_csv.append(run_loop_counter)
         f = open(outfile + '.csv', "a+")
+        l = [T, I,runs_csv,net_num]
+        l = zip(*l)
         with f:
             writer = csv.writer(f)
-            writer.writerows([[Total_time,network_number,Num_inf]])
+            writer.writerows(l)
+        f.close()
+        with open(outfile + '_T.npy', 'wb') as f:
+            np.save(f, T)
+        f.close()
+        with open(outfile + '_I.npy', 'wb') as f:
+            np.save(f, I)
+        f.close()
+        with open(outfile + '_network_number.npy', 'wb') as f:
+            np.save(f, network_number)
+        f.close()
+        with open(outfile + '_run_loop_counter.npy', 'wb') as f:
+            np.save(f, run_loop_counter)
         f.close()
     return 0
 
@@ -1149,7 +1170,7 @@ def actasmain():
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    temporal_direct_extinction(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type)
+    temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
@@ -1203,4 +1224,4 @@ if __name__ == '__main__':
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
          elif sys.argv[1] == 'thr':
              temporal_direct_run(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
-                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9])
+                                    int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],float(sys.argv[10]),float(sys.argv[11]))
