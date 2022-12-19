@@ -552,12 +552,19 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
         if G.nodes[0]['infected'] == True:
             Rates[0] = Alpha
         else:
+            weight = 0
+            for j in infected_neghibors[0]:
+                weight = weight + G.nodes[j]['contact_rate']
             Rates[0] = len(infected_neghibors[0])*fun(Total_time+dt)
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
                 Rates[i+1] = Rates[i] + Alpha
             else:
-                Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
+                weight = 0
+                for j in infected_neghibors[i]:
+                    weight = weight + G.nodes[j]['contact_rate']
+                Rates[i+1] = Rates[i] + weight*fun(Total_time+dt)
+                # Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
 
@@ -1129,6 +1136,8 @@ def actasmain():
         return Beta_avg
     # beta = lambda t: Beta_avg
     # G = nx.random_regular_graph(k, N)
+    beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_sus, eps_lam, 1.0)
+    G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus, beta_inf)
     G = netinithomo.intalize_homo_temporal_graph(G)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \

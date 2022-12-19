@@ -45,6 +45,16 @@ def intalize_homo_temporal_graph(G):
     # nx.set_node_attributes(G, set(),'infected_neghibors')
     return G
 
+def intalize_hetro_temporal_graph(G, N, beta_sus,beta_inf):
+    nx.set_node_attributes(G, False, 'infected')
+    nx.set_node_attributes(G, 0, 'contact_rate')
+    nx.set_node_attributes(G, 0, 'spread_rate')
+    for i in range(N):
+        G.nodes[i]['contact_rate'] = beta_sus[i]
+        G.nodes[i]['spread_rate'] = beta_inf[i]
+    return G
+
+
 
 def set_graph_attriubute_DiGraph(G):
     nx.set_node_attributes(G, False, 'infected')

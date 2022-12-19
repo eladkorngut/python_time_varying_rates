@@ -23,22 +23,22 @@ if __name__ == '__main__':
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.3
-    Time_limit = 1100
+    Time_limit = 250
     Start_recording_time = 100
     Beta_avg = Alpha*Lam / k
     Num_different_networks= 10
     Num_inital_conditions= 100
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k500_net10_init100_lam13_duration50_start100_end1100_alpha1_amp08'
+    foldername ='cat_N500_k100_net10_init100_lam13_duration100_start100_end250_alpha1_fraction10'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q,beta_time_type = 0.8, 50.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 1.0, 100.0, 100.0,'c'
     rate_type ='ca'
-    amplitude,frequency=0.8,1.0
+    amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
@@ -309,24 +309,28 @@ if __name__ == '__main__':
                           str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
                           ' ' + str(n)  + ' ' + str(rate_type))
     elif prog == 'thr':
-        for n in range(Num_different_networks):
-            if rate_type == 'c':
-                with open('parmeters.npy', 'wb') as f:
-                    np.save(f, np.array[Beta_avg])
-            elif rate_type == 's':
-                with open('parmeters.npy', 'wb') as f:
-                    np.save(f, np.array([Beta_avg, amplitude, frequency]))
-            elif rate_type=='ca':
-                with open('parmeters.npy', 'wb') as f:
-                    np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
-            # G = nx.random_regular_graph(k, N)
-            G = nx.complete_graph(N)
-            G = netinithomo.intalize_homo_temporal_graph(G)
-            infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
-            nx.write_gpickle(G, infile)
-            outfile = 'o' + str(Lam).replace('.', '')
-            for p in range(parts):
-                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
-                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
-                          str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
-                          ' ' + str(n)  + ' ' + str(rate_type) + ' ' + str(Time_limit)+ ' ' + str(Start_recording_time))
+        for epsilon_sus,epsilon_inf in zip(Epsilon_sus,Epsilon_inf):
+            Beta=Beta_avg/(1+epsilon_sus*epsilon_inf)
+            for n in range(Num_different_networks):
+                if rate_type == 'c':
+                    with open('parmeters.npy', 'wb') as f:
+                        np.save(f, np.array[Beta_avg])
+                elif rate_type == 's':
+                    with open('parmeters.npy', 'wb') as f:
+                        np.save(f, np.array([Beta_avg, amplitude, frequency]))
+                elif rate_type=='ca':
+                    with open('parmeters.npy', 'wb') as f:
+                        np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
+                G = nx.random_regular_graph(k, N)
+                beta_inf,beta_sus=netinithomo.bi_beta_correlated(N,epsilon_inf,epsilon_sus,1.0)
+                # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
+                # G = nx.complete_graph(N)
+                G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus,beta_inf)
+                infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
+                nx.write_gpickle(G, infile)
+                outfile = 'o' + str(Lam).replace('.', '')
+                for p in range(parts):
+                    os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+                              str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
+                              str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
+                              ' ' + str(n)  + ' ' + str(rate_type) + ' ' + str(Time_limit)+ ' ' + str(Start_recording_time))
