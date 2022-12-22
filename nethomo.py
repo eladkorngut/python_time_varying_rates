@@ -8,12 +8,12 @@ import csv
 import pickle
 
 if __name__ == '__main__':
-    Epsilon_sus = [0.0]
-    Epsilon_inf = [0.0]
+    Epsilon_sus = [0.5]
+    Epsilon_inf = [0.5]
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
-    N = 500
+    N = 300
     k = 100
     x = 0.2
     Num_inf = int(x * N)
@@ -30,13 +30,13 @@ if __name__ == '__main__':
     Num_inital_conditions= 100
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k100_net10_init100_lam13_duration100_start100_end250_alpha1_fraction10'
+    foldername ='cat_N300_k100_net10_init100_lam13_duration100_start100_end250_alpha1_fraction50_eps05'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q,beta_time_type = 1.0, 100.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 5.0, 100.0, 100.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
