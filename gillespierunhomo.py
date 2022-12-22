@@ -628,30 +628,31 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))
                 count = 0
-            if Total_time-T[-1]>=0.1 and Total_time>=Start_recording_time:
-                I.append(Num_inf)
-                T.append(Total_time)
-                net_num.append(network_number)
-                runs_csv.append(run_loop_counter)
+            # if Total_time-T[-1]>=0.1 and Total_time>=Start_recording_time:
+            #     I.append(Num_inf)
+            #     T.append(Total_time)
+            #     net_num.append(network_number)
+            #     runs_csv.append(run_loop_counter)
         f = open(outfile + '.csv', "a+")
-        l = [T, I,runs_csv,net_num]
-        l = zip(*l)
+        # l = [T, I,runs_csv,net_num]
+        # l = zip(*l)
         with f:
             writer = csv.writer(f)
-            writer.writerows(l)
+            # writer.writerows(l)
+            writer.writerows([[Total_time,network_number,Num_inf]])
         f.close()
-        with open(outfile + '_T.npy', 'wb') as f:
-            np.save(f, T)
-        f.close()
-        with open(outfile + '_I.npy', 'wb') as f:
-            np.save(f, I)
-        f.close()
-        with open(outfile + '_network_number.npy', 'wb') as f:
-            np.save(f, network_number)
-        f.close()
-        with open(outfile + '_run_loop_counter.npy', 'wb') as f:
-            np.save(f, run_loop_counter)
-        f.close()
+        # with open(outfile + '_T.npy', 'wb') as f:
+        #     np.save(f, Total_time)
+        # f.close()
+        # with open(outfile + '_I.npy', 'wb') as f:
+        #     np.save(f, I)
+        # f.close()
+        # with open(outfile + '_network_number.npy', 'wb') as f:
+        #     np.save(f, network_number)
+        # f.close()
+        # with open(outfile + '_run_loop_counter.npy', 'wb') as f:
+        #     np.save(f, run_loop_counter)
+        # f.close()
     return 0
 
 
