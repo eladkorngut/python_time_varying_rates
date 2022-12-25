@@ -561,7 +561,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
                 Rates[i+1] = Rates[i] + Alpha
             else:
                 weight = 0
-                for j in infected_neghibors[i]:
+                for j in infected_neghibors[i+1]:
                     weight = weight + G.nodes[j]['contact_rate']
                 Rates[i+1] = Rates[i] + weight*fun(Total_time+dt)
                 # Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
@@ -1086,11 +1086,11 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 100
+    N = 500
     k = 50
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
-    eps_sus,eps_lam = 0.0,0.0
+    eps_sus,eps_lam = 0.2,0.2
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
@@ -1099,7 +1099,7 @@ def actasmain():
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.6
     Time_limit = 200
-    Start_recording_time = 50
+    Start_recording_time = 100
     Beta_avg = Lam / k
     Num_different_networks= 1
     Num_inital_conditions= 1
@@ -1117,9 +1117,9 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q = 0.5, 0.5, 100.0
+    factor, duration, time_q,beta_time_type = 1.0, 100.0, 100.0,'c'
     beta_time_type='p'
-    rate_type= 's'
+    rate_type= 'ca'
     amplitude,frequency=0.1,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
@@ -1175,10 +1175,13 @@ def actasmain():
     #                        Start_recording_time)
     if rate_type == 'c':
         with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array([Beta_avg]))
+            np.save(f, np.array[Beta_avg])
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([Beta_avg, amplitude, frequency]))
+    elif rate_type == 'ca':
+        with open('parmeters.npy', 'wb') as f:
+            np.save(f, np.array([time_q, Beta_avg, Beta_avg * factor, duration]))
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
 
