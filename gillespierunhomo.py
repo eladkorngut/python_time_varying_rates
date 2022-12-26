@@ -555,7 +555,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
             weight = 0
             for j in infected_neghibors[0]:
                 weight = weight + G.nodes[j]['contact_rate']
-            Rates[0] = len(infected_neghibors[0])*fun(Total_time+dt)
+            Rates[0] = weight*fun(Total_time+dt)
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
                 Rates[i+1] = Rates[i] + Alpha
