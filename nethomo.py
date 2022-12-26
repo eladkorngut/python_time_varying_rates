@@ -314,13 +314,13 @@ if __name__ == '__main__':
             for n in range(Num_different_networks):
                 if rate_type == 'c':
                     with open('parmeters.npy', 'wb') as f:
-                        np.save(f, np.array[Beta_avg])
+                        np.save(f, np.array[Beta])
                 elif rate_type == 's':
                     with open('parmeters.npy', 'wb') as f:
-                        np.save(f, np.array([Beta_avg, amplitude, frequency]))
+                        np.save(f, np.array([Beta, amplitude, frequency]))
                 elif rate_type=='ca':
                     with open('parmeters.npy', 'wb') as f:
-                        np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
+                        np.save(f, np.array([time_q, Beta, Beta*factor,duration]))
                 G = nx.random_regular_graph(k, N)
                 beta_inf,beta_sus=netinithomo.bi_beta_correlated(N,epsilon_inf,epsilon_sus,1.0)
                 # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)

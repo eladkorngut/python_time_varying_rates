@@ -1087,8 +1087,8 @@ def fluctuation_run_track_lam(Alpha,Time_limit,bank,outfile,infile,epsilon,avg_b
 
 
 def actasmain():
-    Epsilon_sus = [0.0]
-    Epsilon_inf = [0.0]
+    Epsilon_sus = [0.2]
+    Epsilon_inf = [0.2]
     Epsilon=[0.0]
     N = 500
     k = 100
@@ -1100,13 +1100,13 @@ def actasmain():
     susceptibility = 'bimodal'
     infectability = 'bimodal'
     directed_model='gauss_c'
-    prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.5
     Time_limit = 200
     Start_recording_time = 100
     Beta_avg = Lam / k
     Num_different_networks= 1
-    Num_inital_conditions= 50
+    Num_inital_conditions= 100
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1124,7 +1124,7 @@ def actasmain():
     factor, duration, time_q,beta_time_type = 0.8, 100.0, 100.0,'c'
     beta_time_type='p'
     rate_type= 'ca'
-    amplitude,frequency=0.1,1.0
+    amplitude,frequency=0.8,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
@@ -1141,9 +1141,9 @@ def actasmain():
         return Beta_avg
     # beta = lambda t: Beta_avg
     # G = nx.random_regular_graph(k, N)
-    beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_sus, eps_lam, 1.0)
+    beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_lam, eps_sus, 1.0)
     G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus, beta_inf)
-    G = netinithomo.intalize_homo_temporal_graph(G)
+    # G = netinithomo.intalize_homo_temporal_graph(G)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \
     #     if net_dist == 'gauss' else np.random.gamma((avg / epsilon) ** 2, epsilon ** 2 / avg, N) \
@@ -1179,13 +1179,13 @@ def actasmain():
     #                        Start_recording_time)
     if rate_type == 'c':
         with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array[Beta_avg])
+            np.save(f, np.array[Beta])
     elif rate_type == 's':
         with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array([Beta_avg, amplitude, frequency]))
+            np.save(f, np.array([Beta, amplitude, frequency]))
     elif rate_type == 'ca':
         with open('parmeters.npy', 'wb') as f:
-            np.save(f, np.array([time_q, Beta_avg, Beta_avg * factor, duration]))
+            np.save(f, np.array([time_q, Beta, Beta * factor, duration]))
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
 
