@@ -578,7 +578,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
         fun = lambda t: Beta*(1+amplitude*np.cos(2*np.pi*t/frequency))
     elif rate_type == 'ca':
         time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
-        fun = lambda Total_time: beta_factor if Total_time > time_q and Total_time <= time_q + duration else beta_org
+        fun = lambda t: beta_factor if t > time_q and t <= time_q + duration else beta_org
 
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
@@ -589,6 +589,8 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
         count = 0
         Num_inf = seed_nodes
         I.append(Num_inf)
+        for l in range(G.number_of_nodes()):
+            G.nodes[l]['infected'] = False
         r = np.random.uniform(0, 1, (bank, 2))
         SI_connections,infected_neighbors,weights = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
         ######################
