@@ -547,23 +547,23 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
 
 def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,Time_limit,Start_recording_time):
 
-    def rnorm(Alpha,dt,G,fun,Total_time,infected_neghibors):
+    def rnorm(Alpha,dt,G,fun,Total_time,weights):
         Rates = np.empty(G.number_of_nodes())
         if G.nodes[0]['infected'] == True:
             Rates[0] = Alpha
         else:
-            weight = 0
-            for j in infected_neghibors[0]:
-                weight = weight + G.nodes[j]['contact_rate']
-            Rates[0] = weight*fun(Total_time+dt)
+            # weight = 0
+            # for j in infected_neghibors[0]:
+            #     weight = weight + G.nodes[j]['contact_rate']
+            Rates[0] = weights[0]*fun(Total_time+dt)
         for i in range(G.number_of_nodes()-1):
             if G.nodes[i+1]['infected'] == True:
                 Rates[i+1] = Rates[i] + Alpha
             else:
-                weight = 0
-                for j in infected_neghibors[i+1]:
-                    weight = weight + G.nodes[j]['contact_rate']
-                Rates[i+1] = Rates[i] + weight*fun(Total_time+dt)
+                # weight = 0
+                # for j in infected_neghibors[i+1]:
+                #     weight = weight + G.nodes[j]['contact_rate']
+                Rates[i+1] = Rates[i] + weights[i+1]*fun(Total_time+dt)
                 # Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
@@ -590,7 +590,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
         Num_inf = seed_nodes
         I.append(Num_inf)
         r = np.random.uniform(0, 1, (bank, 2))
-        SI_connections,infected_neighbors = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
+        SI_connections,infected_neighbors,weights = netinithomo.inatlize_direct_temporal_graph(G,Num_inf,G.number_of_nodes(),fun)
         ######################
         # Main Gillespie Loop
         ######################
@@ -599,7 +599,7 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
             integral_fun_t = lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0]
             fun_rand_time = lambda t:integral_fun_t(t) + np.log(r[count, 0])
             tau = float(fsolve(fun_rand_time, 1.0))
-            R_norm = rnorm(Alpha, tau, G, fun, Total_time,infected_neighbors)
+            R_norm = rnorm(Alpha, tau, G, fun, Total_time,weights)
             r_pos = R_norm[-1] * r[count, 1]
             person = bisect.bisect_left(R_norm, r_pos)
             Total_time = Total_time + tau
@@ -617,13 +617,17 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
                 Num_inf = Num_inf - 1
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].remove(person)
-                    SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
+                    weights[Neighbor] = weights[Neighbor] - G.nodes[person]['contact_rate']
+                    SI_connections = SI_connections + G.nodes[Neighbor]['contact_rate'] if G.nodes[Neighbor]['infected']==True else SI_connections - G.nodes[person]['contact_rate']
+                    # SI_connections = SI_connections+1 if G.nodes[Neighbor]['infected']==True else SI_connections - 1
             else:
                 Num_inf = Num_inf + 1
                 G.nodes[person]['infected'] = True
                 for Neighbor in G[person]:
                     infected_neighbors[Neighbor].add(person)
-                    SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
+                    weights[Neighbor] = weights[Neighbor] + G.nodes[person]['contact_rate']
+                    SI_connections = SI_connections - G.nodes[Neighbor]['contact_rate'] if G.nodes[Neighbor]['infected'] == True else SI_connections + G.nodes[person]['contact_rate']
+                    # SI_connections = SI_connections - 1 if G.nodes[Neighbor]['infected'] == True else SI_connections + 1
             count = count + 1
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))
@@ -1087,7 +1091,7 @@ def actasmain():
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
     N = 500
-    k = 50
+    k = 100
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.2,0.2
@@ -1097,12 +1101,12 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='gauss_c'
     prog = 'q' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.6
+    Lam = 1.5
     Time_limit = 200
     Start_recording_time = 100
     Beta_avg = Lam / k
     Num_different_networks= 1
-    Num_inital_conditions= 1
+    Num_inital_conditions= 50
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1117,7 +1121,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 1.0, 100.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.8, 100.0, 100.0,'c'
     beta_time_type='p'
     rate_type= 'ca'
     amplitude,frequency=0.1,1.0

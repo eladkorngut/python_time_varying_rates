@@ -81,17 +81,20 @@ def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
         G.nodes[i]['infected'] = True
     nx.set_node_attributes(G, fun, 'rate')
     SI_connections = 0
-    infected_neighbors =[]
+    infected_neighbors,weights =[],[]
     for i in range(N):
         infected_neighbors.append(set())
+        weights.append(0)
     for l in range(N):
         if G.nodes[l]['infected'] == True:
             for i in G[l]:
                 # G.nodes[i]['infected_neghibors'].add(l)
                 infected_neighbors[i].add(l)
+                weights[i] = weights[i] + G.nodes[l]['contact_rate']
                 if G.nodes[i]['infected'] == False:
-                    SI_connections = SI_connections + 1
-    return SI_connections,infected_neighbors
+                    SI_connections = SI_connections + G.nodes[l]['contact_rate']
+                    # SI_connections = SI_connections + 1
+    return SI_connections,infected_neighbors,weights
 
 
 def integrand_homo_temporal_graph(G,l,t):
