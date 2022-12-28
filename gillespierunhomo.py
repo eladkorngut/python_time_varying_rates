@@ -1104,11 +1104,11 @@ def actasmain():
     directed_model='gauss_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.5
-    Time_limit = 200
+    Time_limit = 150
     Start_recording_time = 100
     Beta_avg = Lam / k
     Num_different_networks= 1
-    Num_inital_conditions= 100
+    Num_inital_conditions= 1
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1125,8 +1125,8 @@ def actasmain():
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
     factor, duration, time_q,beta_time_type = 0.8, 100.0, 100.0,'c'
     beta_time_type='p'
-    rate_type= 'ca'
-    amplitude,frequency=0.8,1.0
+    rate_type= 's'
+    amplitude,frequency=0.1,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 

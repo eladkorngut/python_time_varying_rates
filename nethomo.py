@@ -37,7 +37,7 @@ if __name__ == '__main__':
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
     factor, duration, time_q,beta_time_type = 0.8, 800.0, 100.0,'c'
-    rate_type ='ca'
+    rate_type ='s'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
