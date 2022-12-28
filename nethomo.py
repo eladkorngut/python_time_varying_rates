@@ -23,20 +23,20 @@ if __name__ == '__main__':
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.5
-    Time_limit = 201
+    Time_limit = 901
     Start_recording_time = 100
     Beta_avg = Alpha*Lam / k
     Num_different_networks= 20
     Num_inital_conditions= 200
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k100_net20_init200_lam15_duration100_start100_end201_alpha1_eps02_fraction1'
+    foldername ='cat_N500_k100_net20_init200_lam15_start100_alpha1_fraction08_eps02_duration800_ends901'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q,beta_time_type = 1.0, 100.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.8, 800.0, 100.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
