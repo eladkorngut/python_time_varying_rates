@@ -8,8 +8,8 @@ import csv
 import pickle
 
 if __name__ == '__main__':
-    Epsilon_sus = [0.2]
-    Epsilon_inf = [0.2]
+    Epsilon_sus = [0.0]
+    Epsilon_inf = [0.0]
     # Epsilon=[0.02]
     eps_din,eps_dout = 0.0,0.0
     # eps_sus,eps_lam = 0.3,-0.3
@@ -23,20 +23,20 @@ if __name__ == '__main__':
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.5
-    Time_limit = 901
+    Time_limit = 201
     Start_recording_time = 100
     Beta_avg = Alpha*Lam / k
     Num_different_networks= 20
     Num_inital_conditions= 200
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k100_net20_init200_lam15_start100_alpha1_fraction08_eps02_duration800_ends901'
+    foldername ='cat_N500_k100_net20_init200_lam15_start100_alpha1_fraction01_eps0_duration100_ends201'
     graphname  = 'GNull'
     count = 0
     susceptibility_avg = 1.0
     infectability_avg = 1.0
     sus_inf_correlation = 'ac'
-    factor, duration, time_q,beta_time_type = 0.8, 800.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.1, 100.0, 100.0,'c'
     rate_type ='s'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -321,10 +321,10 @@ if __name__ == '__main__':
                 elif rate_type=='ca':
                     with open('parmeters.npy', 'wb') as f:
                         np.save(f, np.array([time_q, Beta, Beta*factor,duration]))
-                G = nx.random_regular_graph(k, N)
+                # G = nx.random_regular_graph(k, N)
                 beta_inf,beta_sus=netinithomo.bi_beta_correlated(N,epsilon_inf,epsilon_sus,1.0)
                 # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
-                # G = nx.complete_graph(N)
+                G = nx.complete_graph(N)
                 G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
                 nx.write_gpickle(G, infile)
