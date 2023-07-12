@@ -13,7 +13,7 @@ import dill
 import warnings
 warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 from scipy.io import savemat
-
+# from numba import jit
 
 
 
@@ -113,9 +113,18 @@ def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_nu
                 if G.nodes[person]['infected'] == True:
                   pass
             except:
-                  print('Accessing G.noes[person][infected] failed value of person is ',person)
+                  print('Accessing G.nodes[person][infected] failed value of person is ',person)
                   if person == G.number_of_nodes():
                       person =G.number_of_nodes()-1
+
+            # if person<G.number_of_nodes():
+            #     if G.nodes[person]['infected']:
+            #         pass
+            #     else:
+            #         print('Accessing G.nodes[person][infected] failed value of person is ',person)
+            # else:
+            #     print('Accessing G.nodes[person][infected] failed value of person is ',person)
+            #     person = G.number_of_nodes()-1
 
             if G.nodes[person]['infected'] == True:
                 Num_inf = Num_inf - 1
@@ -544,7 +553,6 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
     return 0
 
 
-
 def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,rate_type,Time_limit,Start_recording_time):
 
     def rnorm(Alpha,dt,G,fun,Total_time,weights):
@@ -721,6 +729,89 @@ def fluctuation_run_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
         f.close()
     return 0
 
+# @jit(nopython=True) # Set "nopython" mode for best performance, equivalent to @njit
+def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
+
+
+    time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
+
+    # def integrand(t, Num_inf, Alpha, N):
+    #     condition = (t > time_q) & (t <= time_q + duration)
+    #     result = np.empty_like(Num_inf)
+    #     result[condition] = Num_inf[condition] * Alpha + beta_org * (N - Num_inf[condition]) * Num_inf[condition]
+    #     result[~condition] = Num_inf[~condition] * Alpha + beta_factor * (N - Num_inf[~condition]) * Num_inf[~condition]
+    #     return result
+
+    def integrand(t, Num_inf):
+        if (t < time_q) or (t >= time_q + duration):
+            return Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf
+        return Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
+
+    # def total_network_rate(Total_time, Num_inf):
+    #     condition = (Total_time > time_q) & (Total_time <= time_q + duration)
+    #     result = np.empty_like(Num_inf)
+    #     result[condition] = Num_inf[condition] * Alpha + beta_org * (N - Num_inf[condition]) * Num_inf[condition]
+    #     result[~condition] = Num_inf[~condition] * Alpha + beta_factor * (N - Num_inf[~condition]) * Num_inf[~condition]
+    #     return result
+    #
+
+    # integrand = lambda t, Total_time, Num_inf, Alpha, N: Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf if t > time_q and t <= time_q else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
+    # integrand = lambda t, Total_time, Num_inf, Alpha, N: Num_inf * Alpha + fun(t)*(N-Num_inf)*Num_inf]
+    tau_extinction,tau_presistnce=[],[]
+    Num_inf = seed_nodes*np.ones(runs)
+    Total_time = np.zeros(runs)
+    count = 0
+    r = np.random.uniform(0, 1, (bank, 2))
+    # integral_fun_t = lambda tf_values: np.array(list(map( lambda tf: quad(lambda t: integrand(t + Total_time,Num_inf,Alpha,N), 0, tf)[0],tf_values)))
+    integral_fun_t = lambda tf_values,Num_inf_values,Total_time_values: np.array(list(map( lambda tf,inf,total_time: quad(lambda t: integrand(t + total_time,inf), 0, tf)[0],tf_values,Num_inf_values,Total_time_values)))
+    fun_rand_time = lambda t,r,: integral_fun_t(t,Num_inf,Total_time) + r
+    rates = np.empty_like(Num_inf)
+    while 1:
+        if count >= bank:
+            r = np.random.uniform(0, 1, (bank, 2))
+            count = 0
+        # integrand = lambda t: Num_inf * Alpha + fun(t)*(N-Num_inf)*Num_inf
+        # integrand = lambda t: (Num_inf/N )* Alpha + fun(t)*(1-(Num_inf/N))*(Num_inf/N)
+        # integral_fun_t = lambda tf_values: np.array(list(map( lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0],tf_values)))
+        # fun_rand_time = lambda t: integral_fun_t(t) + np.log(r[count:count+runs, 0])
+        # tau = fsolve(fun_rand_time, np.ones(runs))
+        tau = fsolve(fun_rand_time, np.ones(runs),args=(np.log(r[count:count+runs, 0])))
+        condition = (Total_time > time_q) & (Total_time <= time_q + duration)
+        rates[condition] = Num_inf[condition] * Alpha + beta_org * (N - Num_inf[condition]) * Num_inf[condition]
+        rates[~condition] = Num_inf[~condition] * Alpha + beta_factor * (N - Num_inf[~condition]) * Num_inf[~condition]
+        condition = np.logical_and( (Num_inf * Alpha)/rates<r[count:count+runs, 1],Num_inf<N )
+        Num_inf[condition] = Num_inf[condition]+1
+        Num_inf[~condition] = Num_inf[~condition]-1
+        # for i in np.arange(Num_inf.size):
+        #     Num_inf[condition] = Num_inf[condition]+1 if (Num_inf * Alpha)/rates<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
+        #     Num_inf[i] = Num_inf[i]+1 if (Num_inf * Alpha)/rates<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
+        # for i in np.arange(Num_inf.size):
+        #     Num_inf[i] = Num_inf[i]+1 if (Num_inf * Alpha)/integrand_vec(Total_time,Num_inf)<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
+            # Num_inf[i] = Num_inf[i]+1 if ((Num_inf/N) * Alpha)/integrand(Total_time)<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
+        # Num_inf = np.where((Num_inf * Alpha)/integrand(Total_time)<r[count:count+runs, 1] and Num_inf<N,Num_inf+1,Num_inf-1)
+        Total_time = Total_time + tau
+        if np.any(Num_inf==0):
+            con = Num_inf<=0
+            tau_extinction.append(Total_time[con])
+            Total_time = Total_time[~con]
+            rates = rates[~con]
+            Num_inf = Num_inf[~con]
+            runs = np.size(Num_inf)
+            if runs==0:
+                break
+        if np.any(Total_time>Time_limit):
+            con = Total_time<Time_limit
+            tau_presistnce = Total_time[~con]
+            Total_time = Total_time[~con]
+            rates = rates[~con]
+            Num_inf = Num_inf[con]
+            runs = np.size(Num_inf)
+            if runs==0:
+                break
+        count = count + 1
+    np.save(outfile+'_tau_extinction.npy',tau_extinction)
+    np.save(outfile+'_tau_presistnce.npy',tau_presistnce)
+    return 0
 
 
 def first_reaction_run_sis(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,start_recording_time,rate_type):
@@ -1089,26 +1180,27 @@ def fluctuation_run_track_lam(Alpha,Time_limit,bank,outfile,infile,epsilon,avg_b
 
 
 def actasmain():
-    Epsilon_sus = [0.2]
-    Epsilon_inf = [0.2]
+    Epsilon_sus = [0.0]
+    Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 500
+    N = 100
     k = 100
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
-    eps_sus,eps_lam = 0.2,0.2
+    eps_sus,eps_lam = 0.0,0.0
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
     infectability = 'bimodal'
-    directed_model='gauss_c'
+    directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.5
-    Time_limit = 150
+    Time_limit = 100000000000006
     Start_recording_time = 100
     Beta_avg = Lam / k
+    # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 1
+    Num_inital_conditions= 2
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1123,15 +1215,14 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.8, 100.0, 100.0,'c'
-    beta_time_type='p'
-    rate_type= 's'
-    amplitude,frequency=0.1,1.0
+    factor, duration, time_q,beta_time_type = 1.0, 1.0, 100.0,'c'
+    rate_type= 'ca'
+    amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
-    G = nx.random_regular_graph(k, N)
-    # G = nx.complete_graph(N)
+    # G = nx.random_regular_graph(k, N)
+    G = nx.complete_graph(N)
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, 0.0, 0.0, 1.0)
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
@@ -1179,6 +1270,7 @@ def actasmain():
     # fluctuation_run_extinction(Alpha,bank,outfile,infile,Num_inital_conditions,Num_inf,1,Beta)
     # first_reaction_run_sis(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n,
     #                        Start_recording_time)
+    # Beta = Lam*N/k
     if rate_type == 'c':
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array[Beta])
@@ -1189,7 +1281,8 @@ def actasmain():
         with open('parmeters.npy', 'wb') as f:
             np.save(f, np.array([time_q, Beta, Beta * factor, duration]))
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
-    temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
+    # temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
+    well_mixed_diff_rates(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
 
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
@@ -1244,3 +1337,6 @@ if __name__ == '__main__':
          elif sys.argv[1] == 'thr':
              temporal_direct_run(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],float(sys.argv[10]),float(sys.argv[11]))
+         elif sys.argv[1] == 'cat1d':
+            well_mixed_diff_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]), int(sys.argv[6]),
+                                int(sys.argv[7]), float(sys.argv[8]),int(sys.argv[9]))
