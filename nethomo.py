@@ -18,17 +18,17 @@ if __name__ == '__main__':
     Alpha = 1.0
     prog = 'cat1d' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.1
-    Time_limit = 220
+    Time_limit = 202
     Start_recording_time = 200
     Beta_avg = Alpha*Lam / k
     Num_different_networks= 20
     Num_inital_conditions= 1000
     bank = 1000000
     parts = 1
-    foldername ='cat_N500_k100_net20_init200_lam15_start100_alpha1_fraction01_eps0_duration100_ends201'
+    foldername ='cat_N1700_k1700_net20_init1000_lam11_start100_alpha1_fraction0_eps0_duration1_ends202'
     graphname  = 'GNull'
     count = 0
-    factor, duration, time_q,beta_time_type = 0.1, 100.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.0, 1.0, 200.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]

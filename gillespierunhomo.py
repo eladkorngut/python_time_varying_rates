@@ -1338,5 +1338,4 @@ if __name__ == '__main__':
              temporal_direct_run(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4],sys.argv[5],
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],float(sys.argv[10]),float(sys.argv[11]))
          elif sys.argv[1] == 'cat1d':
-            well_mixed_diff_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]), int(sys.argv[6]),
-                                int(sys.argv[7]), float(sys.argv[8]),int(sys.argv[9]))
+            well_mixed_diff_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]),int(sys.argv[6]), float(sys.argv[7]),int(sys.argv[8]))
