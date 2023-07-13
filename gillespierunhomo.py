@@ -792,7 +792,7 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         Total_time = Total_time + tau
         if np.any(Num_inf==0):
             con = Num_inf<=0
-            tau_extinction.append(Total_time[con])
+            tau_extinction = np.concatenate((tau_extinction,Total_time[con]))
             Total_time = Total_time[~con]
             rates = rates[~con]
             Num_inf = Num_inf[~con]
@@ -801,9 +801,9 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
                 break
         if np.any(Total_time>Time_limit):
             con = Total_time<Time_limit
-            tau_presistnce = Total_time[~con]
-            Total_time = Total_time[~con]
-            rates = rates[~con]
+            tau_presistnce = np.concatenate((tau_presistnce,Total_time[~con]))
+            Total_time = Total_time[con]
+            rates = rates[con]
             Num_inf = Num_inf[con]
             runs = np.size(Num_inf)
             if runs==0:
@@ -1183,8 +1183,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 1700
-    k = 1700
+    N = 1500
+    k = 1500
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1200,7 +1200,7 @@ def actasmain():
     Beta_avg = Lam / k
     # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 200
+    Num_inital_conditions= 20
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1215,7 +1215,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.0, 1.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.0, 50.0, 200.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
