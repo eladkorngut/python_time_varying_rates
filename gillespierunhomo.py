@@ -777,8 +777,8 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         # tau = fsolve(fun_rand_time, np.ones(runs))
         tau = fsolve(fun_rand_time, np.ones(runs),args=(np.log(r[count:count+runs, 0])))
         condition = (Total_time > time_q) & (Total_time <= time_q + duration)
-        rates[condition] = Num_inf[condition] * Alpha + beta_org * (N - Num_inf[condition]) * Num_inf[condition]
-        rates[~condition] = Num_inf[~condition] * Alpha + beta_factor * (N - Num_inf[~condition]) * Num_inf[~condition]
+        rates[~condition] = Num_inf[~condition] * Alpha + beta_org * (N - Num_inf[~condition]) * Num_inf[~condition]
+        rates[condition] = Num_inf[condition] * Alpha + beta_factor * (N - Num_inf[condition]) * Num_inf[condition]
         condition = np.logical_and( (Num_inf * Alpha)/rates<r[count:count+runs, 1],Num_inf<N )
         Num_inf[condition] = Num_inf[condition]+1
         Num_inf[~condition] = Num_inf[~condition]-1
@@ -1183,8 +1183,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 100
-    k = 100
+    N = 1700
+    k = 1700
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1194,13 +1194,13 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.5
-    Time_limit = 100000000000006
+    Lam = 1.1
+    Time_limit = 200
     Start_recording_time = 100
     Beta_avg = Lam / k
     # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 2
+    Num_inital_conditions= 200
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1215,7 +1215,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 1.0, 1.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.0, 1.0, 100.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
