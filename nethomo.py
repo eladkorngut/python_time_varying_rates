@@ -34,6 +34,7 @@ if __name__ == '__main__':
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
 
 
+
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx' \
             or prog=='thr' or prog=='cat1d':
@@ -332,7 +333,9 @@ if __name__ == '__main__':
         for n in range(Num_different_networks):
             with open('parmeters.npy', 'wb') as f:
                 np.save(f, np.array([time_q, Beta, Beta*factor,duration]))
-            outfile = 'o' + str(Lam).replace('.', '')
+            with open('run_parameters.npy','wb') as f:
+                np.save(f,np.array([N,Lam]))
+            outfile = 'o_' + str(n).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +str(Num_inital_conditions) +

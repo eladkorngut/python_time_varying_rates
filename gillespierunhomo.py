@@ -799,6 +799,7 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
             runs = np.size(Num_inf)
             if runs==0:
                 break
+            print('Number of runs:'+str(runs))
         if np.any(Total_time>Time_limit):
             con = Total_time<Time_limit
             tau_presistnce = np.concatenate((tau_presistnce,Total_time[~con]))
@@ -808,9 +809,10 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
             runs = np.size(Num_inf)
             if runs==0:
                 break
+            print('Number of runs:'+str(runs))
         count = count + 1
-    np.save(outfile+'_tau_extinction.npy',tau_extinction)
-    np.save(outfile+'_tau_presistnce.npy',tau_presistnce)
+    np.save(outfile + '_tau_extinction.npy',tau_extinction)
+    np.save(outfile + '_tau_presistnce.npy',tau_presistnce)
     return 0
 
 
