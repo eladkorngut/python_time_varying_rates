@@ -746,71 +746,36 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         if (t < time_q) or (t >= time_q + duration):
             return Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf
         return Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
-
-    # def total_network_rate(Total_time, Num_inf):
-    #     condition = (Total_time > time_q) & (Total_time <= time_q + duration)
-    #     result = np.empty_like(Num_inf)
-    #     result[condition] = Num_inf[condition] * Alpha + beta_org * (N - Num_inf[condition]) * Num_inf[condition]
-    #     result[~condition] = Num_inf[~condition] * Alpha + beta_factor * (N - Num_inf[~condition]) * Num_inf[~condition]
-    #     return result
-    #
-
-    # integrand = lambda t, Total_time, Num_inf, Alpha, N: Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf if t > time_q and t <= time_q else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
-    # integrand = lambda t, Total_time, Num_inf, Alpha, N: Num_inf * Alpha + fun(t)*(N-Num_inf)*Num_inf]
     tau_extinction,tau_presistnce=[],[]
-    Num_inf = seed_nodes*np.ones(runs)
-    Total_time = np.zeros(runs)
+    Num_inf = seed_nodes
+    # Total_time = np.zeros(runs)
     count = 0
     r = np.random.uniform(0, 1, (bank, 2))
-    # integral_fun_t = lambda tf_values: np.array(list(map( lambda tf: quad(lambda t: integrand(t + Total_time,Num_inf,Alpha,N), 0, tf)[0],tf_values)))
-    integral_fun_t = lambda tf_values,Num_inf_values,Total_time_values: np.array(list(map( lambda tf,inf,total_time: quad(lambda t: integrand(t + total_time,inf), 0, tf)[0],tf_values,Num_inf_values,Total_time_values)))
-    fun_rand_time = lambda t,r,: integral_fun_t(t,Num_inf,Total_time) + r
+    # integral_fun_t = lambda tf_values,Num_inf_values,Total_time_values: np.array(list(map( lambda tf,inf,total_time: quad(lambda t: integrand(t + total_time,inf), 0, tf)[0],tf_values,Num_inf_values,Total_time_values)))
+    integrand = lambda Total_time,Num_inf: Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf if Total_time > time_q + duration or Total_time <= time_q else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
+    integral_fun_t = lambda tf,Num_inf,Total_time: quad(lambda t: integrand(t + Total_time,Num_inf), 0, tf)[0]
+    fun_rand_time = lambda t,r: integral_fun_t(t,Num_inf,Total_time) + r
+    rates = lambda Num_inf,Total_time: Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
     rates = np.empty_like(Num_inf)
-    while 1:
-        if count >= bank:
-            r = np.random.uniform(0, 1, (bank, 2))
-            count = 0
-        # integrand = lambda t: Num_inf * Alpha + fun(t)*(N-Num_inf)*Num_inf
-        # integrand = lambda t: (Num_inf/N )* Alpha + fun(t)*(1-(Num_inf/N))*(Num_inf/N)
-        # integral_fun_t = lambda tf_values: np.array(list(map( lambda tf: quad(lambda t: integrand(t + Total_time), 0, tf)[0],tf_values)))
-        # fun_rand_time = lambda t: integral_fun_t(t) + np.log(r[count:count+runs, 0])
-        # tau = fsolve(fun_rand_time, np.ones(runs))
-        tau = fsolve(fun_rand_time, np.ones(runs),args=(np.log(r[count:count+runs, 0])))
-        condition = (Total_time > time_q) & (Total_time <= time_q + duration)
-        rates[~condition] = Num_inf[~condition] * Alpha + beta_org * (N - Num_inf[~condition]) * Num_inf[~condition]
-        rates[condition] = Num_inf[condition] * Alpha + beta_factor * (N - Num_inf[condition]) * Num_inf[condition]
-        condition = np.logical_and( (Num_inf * Alpha)/rates<r[count:count+runs, 1],Num_inf<N )
-        Num_inf[condition] = Num_inf[condition]+1
-        Num_inf[~condition] = Num_inf[~condition]-1
-        # for i in np.arange(Num_inf.size):
-        #     Num_inf[condition] = Num_inf[condition]+1 if (Num_inf * Alpha)/rates<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
-        #     Num_inf[i] = Num_inf[i]+1 if (Num_inf * Alpha)/rates<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
-        # for i in np.arange(Num_inf.size):
-        #     Num_inf[i] = Num_inf[i]+1 if (Num_inf * Alpha)/integrand_vec(Total_time,Num_inf)<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
-            # Num_inf[i] = Num_inf[i]+1 if ((Num_inf/N) * Alpha)/integrand(Total_time)<r[count:count+runs, 1] and Num_inf<N else Num_inf[i]-1
-        # Num_inf = np.where((Num_inf * Alpha)/integrand(Total_time)<r[count:count+runs, 1] and Num_inf<N,Num_inf+1,Num_inf-1)
-        Total_time = Total_time + tau
-        if np.any(Num_inf==0):
-            con = Num_inf<=0
-            tau_extinction = np.concatenate((tau_extinction,Total_time[con]))
-            Total_time = Total_time[~con]
-            rates = rates[~con]
-            Num_inf = Num_inf[~con]
-            runs = np.size(Num_inf)
-            if runs==0:
-                break
-            print('Number of runs:'+str(runs))
-        if np.any(Total_time>Time_limit):
-            con = Total_time<Time_limit
-            tau_presistnce = np.concatenate((tau_presistnce,Total_time[~con]))
-            Total_time = Total_time[con]
-            rates = rates[con]
-            Num_inf = Num_inf[con]
-            runs = np.size(Num_inf)
-            if runs==0:
-                break
-            print('Number of runs:'+str(runs))
-        count = count + 1
+
+    for run_loop_counter in range(runs):
+        Total_time =0.0
+        count = 0
+        Num_inf = seed_nodes
+        r = np.random.uniform(0,1,(bank,2))
+        ######################
+        # Main Gillespie Loop
+        ######################
+        while Num_inf>0 and  Total_time<Time_limit:
+           rates =  Num_inf* Alpha + beta_org * (N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
+           Num_inf = Num_inf+1 if (Alpha*Num_inf)/rates<r[count, 1] else Num_inf-1
+           tau = float(fsolve(fun_rand_time, 1.0,args=(np.log(r[count, 0]))))
+           Total_time = Total_time +tau
+           count = count + 1
+           if count >= bank:
+               r = np.random.uniform(0, 1, (bank, 2))
+               count = 0
+        tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
     np.save(outfile + '_tau_extinction.npy',tau_extinction)
     np.save(outfile + '_tau_presistnce.npy',tau_presistnce)
     return 0
@@ -1185,8 +1150,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 1500
-    k = 1500
+    N = 2000
+    k = 2000
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1197,12 +1162,12 @@ def actasmain():
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.1
-    Time_limit = 200
+    Time_limit = 150
     Start_recording_time = 100
     Beta_avg = Lam / k
     # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 20
+    Num_inital_conditions= 10
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1217,7 +1182,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.0, 50.0, 200.0,'c'
+    factor, duration, time_q,beta_time_type = 0.0, 50.0, 100.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
