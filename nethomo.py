@@ -1,6 +1,5 @@
 import os
 import networkx as nx
-import numpy
 import numpy as np
 import netinithomo
 import rand_networks
@@ -11,24 +10,24 @@ if __name__ == '__main__':
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     eps_din,eps_dout = 0.0,0.0
-    N = 1700
-    k = 1700
+    N = 1800
+    k = 1800
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
     prog = 'cat1d' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.1
-    Time_limit = 202
+    Lam = 1.12
+    Time_limit = 200
     Start_recording_time = 200
     Beta_avg = Alpha*Lam / k
-    Num_different_networks= 20
-    Num_inital_conditions= 1000
+    Num_different_networks= 100
+    Num_inital_conditions= 500
     bank = 1000000
     parts = 1
-    foldername ='cat_N1700_k1700_net20_init1000_lam11_start100_alpha1_fraction0_eps0_duration1_ends202'
+    foldername ='cat_N1800_k1800_net100_init500_lam112_start100_alpha1_fraction0_eps0_duration0_ends200'
     graphname  = 'GNull'
     count = 0
-    factor, duration, time_q,beta_time_type = 0.0, 1.0, 200.0,'c'
+    factor, duration, time_q,beta_time_type = 1.0, 0.0, 700.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -330,11 +329,11 @@ if __name__ == '__main__':
                               ' ' + str(n)  + ' ' + str(rate_type) + ' ' + str(Time_limit)+ ' ' + str(Start_recording_time))
     elif prog == 'cat1d':
         Beta=Beta_avg
+        with open('run_parameters.npy', 'wb') as f:
+            np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time]))
         for n in range(Num_different_networks):
             with open('parmeters.npy', 'wb') as f:
                 np.save(f, np.array([time_q, Beta, Beta*factor,duration]))
-            with open('run_parameters.npy','wb') as f:
-                np.save(f,np.array([N,Lam]))
             outfile = 'o_' + str(n).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
