@@ -150,21 +150,21 @@ def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_nu
             if count >= bank:
                 r = np.random.uniform(0, 1, (bank, 2))
                 count = 0
-            if Total_time-T[-1]>=0.1:
-                I.append(Num_inf)
-                T.append(Total_time)
-                net_num.append(network_number)
-                runs_csv.append(run_loop_counter)
-        f = open(outfile + '.csv', "a+")
-        l = [T, I, runs_csv,net_num]
-        l = zip(*l)
-        with f:
-            writer = csv.writer(f)
-            writer.writerows(l)
-        f.close()
+        #     if Total_time-T[-1]>=0.1:
+        #         I.append(Num_inf)
+        #         T.append(Total_time)
+        #         net_num.append(network_number)
+        #         runs_csv.append(run_loop_counter)
+        # f = open(outfile + '.csv', "a+")
+        # l = [T, I, runs_csv,net_num]
+        # l = zip(*l)
+        # with f:
+        #     writer = csv.writer(f)
+        #     writer.writerows(l)
+        # f.close()
         tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
-        np.save(outfile+'_'+str(network_number)+'_tau_extinction.npy')
-        np.save(outfile+'_'+str(network_number)+'_tau_presistnce.npy')
+        np.save(outfile+'_'+str(network_number)+'_tau_extinction.npy',tau_extinction)
+        np.save(outfile+'_'+str(network_number)+'_tau_presistnce.npy',tau_presistnce)
     return 0
 
 
@@ -1153,8 +1153,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 2000
-    k = 2000
+    N = 100
+    k = 100
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1164,7 +1164,7 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.1
+    Lam = 1.6
     Time_limit = 150
     Start_recording_time = 100
     Beta_avg = Lam / k
@@ -1253,7 +1253,8 @@ def actasmain():
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     # temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
     well_mixed_diff_rates(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
-
+    # fluctuation_run(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
+    #                 Num_inf, n, Beta_avg)
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
     # fluctuation_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, 1, Beta,Start_recording_time)
