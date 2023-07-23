@@ -55,8 +55,8 @@ if __name__ == '__main__':
             Beta=Beta_avg/(1-epsilon_sus*epsilon_inf)
             for n in range(Num_different_networks):
                 beta_inf,beta_sus=netinithomo.bi_beta_anti_correlated(N,epsilon_inf,epsilon_sus,1.0)
-                G = nx.random_regular_graph(k, N)
-                # G = nx.complete_graph(N)
+                # G = nx.random_regular_graph(k, N)
+                G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
                 nx.write_gpickle(G, infile)

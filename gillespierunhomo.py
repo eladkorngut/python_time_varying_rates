@@ -80,13 +80,13 @@ def fluctuation_init(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank,outfilena
     nx.write_gpickle(G,outfilename + ending + '_G.pickle')
     return 0
 
+
 def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta):
     G=nx.read_gpickle(infile)
     seed_nodes= Num_inf
+    tau_extinction,tau_presistnce=[],[]
     for run_loop_counter in range(runs):
-        T = []
-        I = []
-        runs_csv=[]
+        T,I,runs_csv = [],[],[]
         runs_csv.append(run_loop_counter)
         Total_time = 0.0
         T.append(Total_time)
@@ -162,6 +162,9 @@ def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_nu
             writer = csv.writer(f)
             writer.writerows(l)
         f.close()
+        tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
+        np.save(outfile+'_'+str(network_number)+'_tau_extinction.npy')
+        np.save(outfile+'_'+str(network_number)+'_tau_presistnce.npy')
     return 0
 
 
