@@ -163,8 +163,8 @@ def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_nu
         #     writer.writerows(l)
         # f.close()
         tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
-        np.save(outfile+'_'+str(network_number)+'_tau_extinction.npy',tau_extinction)
-        np.save(outfile+'_'+str(network_number)+'_tau_presistnce.npy',tau_presistnce)
+    np.save(outfile+'_'+str(network_number)+'_tau_extinction.npy',tau_extinction)
+    np.save(outfile+'_'+str(network_number)+'_tau_presistnce.npy',tau_presistnce)
     return 0
 
 

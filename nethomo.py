@@ -10,21 +10,21 @@ if __name__ == '__main__':
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     eps_din,eps_dout = 0.0,0.0
-    N = 1800
-    k = 1800
+    N = 2000
+    k = 2000
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
-    prog = 'cat1d' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    prog = 'r' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.12
     Time_limit = 200
     Start_recording_time = 200
     Beta_avg = Alpha*Lam / k
-    Num_different_networks= 100
-    Num_inital_conditions= 500
+    Num_different_networks= 20
+    Num_inital_conditions= 5000
     bank = 1000000
     parts = 1
-    foldername ='cat_N1800_k1800_net100_init500_lam112_start100_alpha1_fraction0_eps0_duration0_ends200'
+    foldername ='cat_N2000_k2000_net20_init5000_lam112_start100_alpha1_fraction0_eps0_duration0_ends200'
     graphname  = 'GNull'
     count = 0
     factor, duration, time_q,beta_time_type = 1.0, 0.0, 700.0,'c'
@@ -53,6 +53,9 @@ if __name__ == '__main__':
     elif prog=='r':
         for epsilon_sus,epsilon_inf in zip(Epsilon_sus,Epsilon_inf):
             Beta=Beta_avg/(1-epsilon_sus*epsilon_inf)
+            with open('run_parameters.npy', 'wb') as f:
+                np.save(f, np.array(
+                    [N, Num_inital_conditions, Num_different_networks, Lam, Time_limit, Start_recording_time]))
             for n in range(Num_different_networks):
                 beta_inf,beta_sus=netinithomo.bi_beta_anti_correlated(N,epsilon_inf,epsilon_sus,1.0)
                 # G = nx.random_regular_graph(k, N)
