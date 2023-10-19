@@ -10,24 +10,24 @@ if __name__ == '__main__':
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     eps_din,eps_dout = 0.0,0.0
-    N = 2000
-    k = 2000
+    N = 400
+    k = 400
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
-    prog = 'r' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.12
-    Time_limit = 200
-    Start_recording_time = 200
+    prog = 'cat1dr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
+    Lam = 1.3
+    Time_limit = 150
+    Start_recording_time = 50
     Beta_avg = Alpha*Lam / k
     Num_different_networks= 20
     Num_inital_conditions= 5000
     bank = 1000000
     parts = 1
-    foldername ='cat_N2000_k2000_net20_init5000_lam112_start100_alpha1_fraction0_eps0_duration0_ends200'
+    foldername ='cat1dr_N400_k400_net20_init5000_lam13_start50_alpha1_fraction099_eps0_duration0_ends200'
     graphname  = 'GNull'
     count = 0
-    factor, duration, time_q,beta_time_type = 1.0, 0.0, 700.0,'c'
+    factor, duration, time_q,beta_time_type = 0.99, 2.0, 50.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx' \
-            or prog=='thr' or prog=='cat1d':
+            or prog=='thr' or prog=='cat1d' or prog=='cat1dr':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
@@ -330,7 +330,7 @@ if __name__ == '__main__':
                               str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +
                               str(infile) + ' ' + str(Num_inital_conditions) + ' ' + str(Num_inf) +
                               ' ' + str(n)  + ' ' + str(rate_type) + ' ' + str(Time_limit)+ ' ' + str(Start_recording_time))
-    elif prog == 'cat1d':
+    elif prog == 'cat1d' or prog == 'cat1dr' :
         Beta=Beta_avg
         with open('run_parameters.npy', 'wb') as f:
             np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time]))

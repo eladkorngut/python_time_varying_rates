@@ -751,10 +751,7 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         return Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
     tau_extinction,tau_presistnce=[],[]
     Num_inf = seed_nodes
-    # Total_time = np.zeros(runs)
-    count = 0
     r = np.random.uniform(0, 1, (bank, 2))
-    # integral_fun_t = lambda tf_values,Num_inf_values,Total_time_values: np.array(list(map( lambda tf,inf,total_time: quad(lambda t: integrand(t + total_time,inf), 0, tf)[0],tf_values,Num_inf_values,Total_time_values)))
     integrand = lambda Total_time,Num_inf: Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf if Total_time > time_q + duration or Total_time <= time_q else Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
     integral_fun_t = lambda tf,Num_inf,Total_time: quad(lambda t: integrand(t + Total_time,Num_inf), 0, tf)[0]
     fun_rand_time = lambda t,r: integral_fun_t(t,Num_inf,Total_time) + r
@@ -776,6 +773,39 @@ def well_mixed_diff_rates(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
            Total_time = Total_time +tau
            count = count + 1
            if count >= bank:
+               r = np.random.uniform(0, 1, (bank, 2))
+               count = 0
+        tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
+    np.save(outfile + '_tau_extinction.npy',tau_extinction)
+    np.save(outfile + '_tau_presistnce.npy',tau_presistnce)
+    return 0
+
+
+def well_mixed_diff_rates_reg(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
+    time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
+    tau_extinction,tau_presistnce=[],[]
+    for run_loop_counter in range(runs):
+        count = 0
+        Total_time =0.0
+        Num_inf = seed_nodes
+        r = np.random.uniform(0, 1, (bank, 2))
+        rates = Num_inf * Alpha + beta_org * (
+                    N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (
+                    N - Num_inf) * Num_inf
+        tau = np.log(1 / r[count, 0]) / rates
+        Total_time = Total_time + tau
+        ######################
+        # Main Gillespie Loop
+        ######################
+        while Num_inf>0 and  Total_time<Time_limit:
+            rates = Num_inf * Alpha + beta_org * (
+                        N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (
+                        N - Num_inf) * Num_inf
+            tau = np.log(1 / r[count, 0]) / rates
+            Num_inf = Num_inf+1 if (Alpha*Num_inf)/rates<r[count, 1] else Num_inf-1
+            Total_time = Total_time +tau
+            count = count + 1
+            if count >= bank:
                r = np.random.uniform(0, 1, (bank, 2))
                count = 0
         tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
@@ -1252,7 +1282,8 @@ def actasmain():
             np.save(f, np.array([time_q, Beta, Beta * factor, duration]))
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     # temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
-    well_mixed_diff_rates(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
+    # well_mixed_diff_rates(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
+    well_mixed_diff_rates_reg(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
     # fluctuation_run(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, n, Beta_avg)
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
@@ -1310,3 +1341,7 @@ if __name__ == '__main__':
                                     int(sys.argv[6]),int(sys.argv[7]),int(sys.argv[8]),sys.argv[9],float(sys.argv[10]),float(sys.argv[11]))
          elif sys.argv[1] == 'cat1d':
             well_mixed_diff_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]),int(sys.argv[6]), float(sys.argv[7]),int(sys.argv[8]))
+         elif sys.argv[1] == 'cat1dr':
+            well_mixed_diff_rates_reg(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]), int(sys.argv[6]),
+                                      float(sys.argv[7]), int(sys.argv[8]))
+
