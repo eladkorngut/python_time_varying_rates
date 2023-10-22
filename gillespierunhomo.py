@@ -790,7 +790,7 @@ def well_mixed_diff_rates_reg(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         Num_inf = seed_nodes
         r = np.random.uniform(0, 1, (bank, 2))
         rates = Num_inf * Alpha + beta_org * (
-                    N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (
+                    N - Num_inf) * Num_inf if Total_time > time_q and Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (
                     N - Num_inf) * Num_inf
         tau = np.log(1 / r[count, 0]) / rates
         Total_time = Total_time + tau
@@ -798,9 +798,10 @@ def well_mixed_diff_rates_reg(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
         # Main Gillespie Loop
         ######################
         while Num_inf>0 and  Total_time<Time_limit:
-            rates = Num_inf * Alpha + beta_org * (
-                        N - Num_inf) * Num_inf if Total_time > time_q or Total_time <= time_q + duration else Num_inf * Alpha + beta_factor * (
-                        N - Num_inf) * Num_inf
+            if (Total_time > time_q and Total_time <= time_q + duration):
+                rates = Num_inf * Alpha + beta_factor * (N - Num_inf) * Num_inf
+            else:
+                rates =Num_inf * Alpha + beta_org * (N - Num_inf) * Num_inf
             tau = np.log(1 / r[count, 0]) / rates
             Num_inf = Num_inf+1 if (Alpha*Num_inf)/rates<r[count, 1] else Num_inf-1
             Total_time = Total_time +tau
@@ -1183,8 +1184,8 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 100
-    k = 100
+    N = 370
+    k = 370
     x = 0.2
     eps_din,eps_dout = 0.0,0.0
     eps_sus,eps_lam = 0.0,0.0
@@ -1194,13 +1195,13 @@ def actasmain():
     infectability = 'bimodal'
     directed_model='uniform_c'
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
-    Lam = 1.6
+    Lam = 1.3
     Time_limit = 150
     Start_recording_time = 100
     Beta_avg = Lam / k
     # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 10
+    Num_inital_conditions= 1000
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1215,7 +1216,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.0, 50.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.8, 2.0, 100.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
