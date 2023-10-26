@@ -1408,6 +1408,6 @@ if __name__ == '__main__':
             well_mixed_diff_rates_reg(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]), int(sys.argv[6]),
                                       float(sys.argv[7]), int(sys.argv[8]))
          elif sys.argv[1] == 'c2d':
-            bi_varying_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5],int(sys.argv[6]),float(sys.argv[7]), int(sys.argv[8]))
+            bi_varying_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5],int(sys.argv[6]),int(sys.argv[7]), float(sys.argv[8]))
 
 
