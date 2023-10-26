@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     if prog == 'i' or prog=='bi' or prog == 'si' or prog=='e' or prog=='ec' or prog=='ac' or prog=='r' or prog=='ri' or\
             prog=='g' or prog=='rg' or prog=='bd' or prog=='co' or prog=='cr' or prog=='q' or prog=='th' or prog=='thx' \
-            or prog=='thr' or prog=='cat1d' or prog=='cat1dr':
+            or prog=='thr' or prog=='cat1d' or prog=='cat1dr' or prog=='c2d':
         os.mkdir(foldername)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     os.chdir(foldername)
@@ -341,4 +341,21 @@ if __name__ == '__main__':
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +str(Num_inital_conditions) +
+                          ' ' + str(Num_inf) + ' ' + str(Time_limit)+ ' ' + str(N))
+    elif prog == 'c2d' :
+        Beta = Beta_avg / (1 + eps_din * eps_dout)
+        d1_in, d1_out, d2_in, d2_out = int(k*(1-eps_din)),int(k*(1-eps_dout)),int(k*(1+eps_din)),int(k*(1+eps_dout))
+        with open('run_parameters.npy', 'wb') as f:
+            np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time]))
+        for n in range(Num_different_networks):
+            G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out,d2_in,d2_out,N)
+            G = netinithomo.set_graph_attriubute_DiGraph(G)
+            infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
+            nx.write_gpickle(G, infile)
+            with open('parmeters.npy', 'wb') as f:
+                np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
+            outfile = 'o_' + str(n).replace('.', '')
+            for p in range(parts):
+                os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
+                          str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) +  ' ' +str(infile) + ' ' +str(Num_inital_conditions) +
                           ' ' + str(Num_inf) + ' ' + str(Time_limit)+ ' ' + str(N))

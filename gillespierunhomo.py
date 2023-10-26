@@ -815,6 +815,66 @@ def well_mixed_diff_rates_reg(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
     return 0
 
 
+def bi_varying_rates(Alpha,bank,outfile,infile,runs,seed_nodes,Time_limit):
+    time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
+    G = nx.read_gpickle(infile)
+    tau_extinction,tau_presistnce = [], []
+    for run_loop_counter in range(runs):
+        count = 0
+        Total_time = 0.0
+        Num_inf = seed_nodes
+        r = np.random.uniform(0, 1, (bank, 2))
+        R_tot, Rates = netinithomo.inatlize_inf_DiGraph(G, Num_inf, G.number_of_nodes(), Alpha, beta_org)
+        ######################
+        # Main Gillespie Loop
+        ######################
+        while Num_inf>0 and  Total_time<Time_limit:
+            R_norm = np.cumsum(Rates)
+            r_pos = R_tot * r[count, 1]
+            person = bisect.bisect_left(R_norm, r_pos)
+            tau = np.log(1 / r[count, 0]) / R_tot
+            Total_time = Total_time + tau
+            if (Total_time > time_q and Total_time <= time_q + duration):
+                b =  beta_factor
+            else:
+                b = beta_org
+            count = count + 1
+            try:
+                if G.nodes[person]['infected'] == True:
+                    pass
+            except:
+                print('Accessing G.noes[person][infected] failed value of person is ', person)
+                if person == G.number_of_nodes():
+                    person = G.number_of_nodes() - 1
+            if G.nodes[person]['infected'] == True:
+                Num_inf = Num_inf - 1
+                Rates[person] = 0.0
+                for Neighbor in G[person]:
+                    if G.nodes[Neighbor]['infected'] == False:
+                        Rates[Neighbor] = Rates[Neighbor] - b
+                        R_tot = R_tot - b
+                    else:
+                        Rates[person] = Rates[person] + b
+                R_tot = R_tot + Rates[person] - Alpha
+                G.nodes[person]['infected'] = False
+            else:
+                Num_inf = Num_inf + 1
+                for Neighbor in G[person]:
+                    if G.nodes[Neighbor]['infected'] == False:
+                        Rates[Neighbor] = Rates[Neighbor] + b
+                        R_tot = R_tot + b
+                R_tot = R_tot - Rates[person] + Alpha
+                Rates[person] = Alpha
+                G.nodes[person]['infected'] = True
+            count = count + 1
+            if count >= bank:
+               r = np.random.uniform(0, 1, (bank, 2))
+               count = 0
+        tau_extinction.append(Total_time) if Num_inf==0 else tau_presistnce.append(Total_time)
+    np.save(outfile + '_tau_extinction.npy',tau_extinction)
+    np.save(outfile + '_tau_presistnce.npy',tau_presistnce)
+    return 0
+
 def first_reaction_run_sis(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,start_recording_time,rate_type):
 
     def integrand_homo_temporal_graph(G, l, t):
@@ -1184,11 +1244,11 @@ def actasmain():
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     Epsilon=[0.0]
-    N = 370
-    k = 370
+    N = 500
+    k = 200
     x = 0.2
-    eps_din,eps_dout = 0.0,0.0
-    eps_sus,eps_lam = 0.0,0.0
+    eps_din,eps_dout = 0.1,0.1
+    eps_sus,eps_lam = 0.1,0.1
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
@@ -1197,11 +1257,11 @@ def actasmain():
     prog = 'thr' #can be either 'i' for the inatilization and reaching eq state or 'r' for running and recording fluc
     Lam = 1.3
     Time_limit = 150
-    Start_recording_time = 100
+    Start_recording_time = 50
     Beta_avg = Lam / k
     # Beta_avg = Lam
     Num_different_networks= 1
-    Num_inital_conditions= 1000
+    Num_inital_conditions= 10
     bank = 1000000
     parts = 1
     graphname  = 'GNull'
@@ -1216,7 +1276,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.8, 2.0, 100.0,'c'
+    factor, duration, time_q,beta_time_type = 0.8, 2.0, 10.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -1227,16 +1287,19 @@ def actasmain():
     # beta_inf, beta_sus = netinithomo.general_beta(N, eps_lam, eps_sus, directed_model, k)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, 0.0, 0.0, 1.0)
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
-    # d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
-    #     k * (1 + eps_dout))
+    d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
+        k * (1 + eps_dout))
     # G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
     # G = netinithomo.set_graph_attriubute_DiGraph(G)
-    def beta(t):
-        return Beta_avg
     # beta = lambda t: Beta_avg
     # G = nx.random_regular_graph(k, N)
-    beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_lam, eps_sus, 1.0)
-    G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus, beta_inf)
+    # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_lam, eps_sus, 1.0)
+    # G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus, beta_inf)
+    G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
+    G = netinithomo.set_graph_attriubute_DiGraph(G)
+    n=0
+    infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n) + '.pickle'
+
     # G = netinithomo.intalize_homo_temporal_graph(G)
 
     # choose_beta = lambda net_dist, avg, epsilon: np.random.normal(avg, epsilon * avg, N) \
@@ -1259,8 +1322,6 @@ def actasmain():
     # Beta = Beta_avg / (1 + eps_din * eps_dout)
     # Beta = Beta/np.mean([G.in_degree(n) for n in G.nodes()])
     # Beta = Lam/np.mean([G.in_degree(n) for n in G.nodes()])
-    n=0
-
 
     # fluctuation_run_extinction_weighted_graph(Alpha, bank, outfile, infile,
     #                                           Num_inital_conditions, Num_inf, n,
@@ -1284,7 +1345,8 @@ def actasmain():
     # temporal_direct_run_no_decay(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions, Num_inf, n, Start_recording_time, rate_type)
     # temporal_direct_run(Alpha, bank, outfile, infile, Num_inital_conditions, Num_inf, n, rate_type,Time_limit,Start_recording_time)
     # well_mixed_diff_rates(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
-    well_mixed_diff_rates_reg(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
+    # well_mixed_diff_rates_reg(Alpha,bank,outfile,Num_inital_conditions,Num_inf,Time_limit,N)
+    bi_varying_rates(Alpha, bank, outfile, infile, Num_different_networks, Num_inf, Time_limit)
     # fluctuation_run(Alpha, Time_limit, bank, outfile, infile, Num_inital_conditions,
     #                 Num_inf, n, Beta_avg)
     # fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,Num_inital_conditions,Num_inf,n,Beta,factor,duration,time_q,beta_time_type)
@@ -1345,4 +1407,9 @@ if __name__ == '__main__':
          elif sys.argv[1] == 'cat1dr':
             well_mixed_diff_rates_reg(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]), int(sys.argv[6]),
                                       float(sys.argv[7]), int(sys.argv[8]))
+         elif sys.argv[1] == 'c2d':
+            bi_varying_rates(float(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]),
+                                      int(sys.argv[6]),
+                                      float(sys.argv[7]), int(sys.argv[8]))
+
 
