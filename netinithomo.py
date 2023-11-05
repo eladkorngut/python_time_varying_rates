@@ -97,40 +97,26 @@ def inatlize_direct_temporal_graph(G,Num_inf,N,fun):
     return SI_connections,infected_neighbors,weights
 
 
+def inatlize_direct_graph(G,Num_inf,N):
+    inf_node = np.zeros(N,dtype=bool)
+    nx.set_node_attributes(G, False, 'infected')
+    for i in rand.sample(range(0, N - 1), Num_inf):
+        G.nodes[i]['infected'] = True
+        inf_node[i] = True
+    inf_links = np.zeros(N,dtype=int)
+    for l in range(N):
+        if G.nodes[l]['infected'] == True:
+            for i in G[l]:
+                if (G.nodes[i]['infected'] == False):
+                    inf_links[i] = inf_links[i] + 1
+    inf_links_tot = np.sum(inf_links)
+    return inf_links_tot, inf_links, inf_node
+
 def integrand_homo_temporal_graph(G,l,t):
     sum=0
     for i in G.nodes[l]['infected_neghibors']:
         sum = sum + G.nodes[i]['rate'](t)
     return sum
-
-
-# def inatlize_homo_temporal_graph(G,Num_inf,N,Alpha):
-#     for i in rand.sample(range(0, N - 1), Num_inf):
-#         G.nodes[i]['infected'] = True
-#     scheduler = pqdict()
-#     r = np.random.uniform(0, 1, N)
-#     for l in range(N):
-#         if G.nodes[l]['infected'] == True:
-#             scheduler[l] = -np.log(r[l])/Alpha
-#             for i in G[l]:
-#                 G.nodes[i]['infected_neghibors'].add(l)
-#     for l in range(N):
-#         if G.nodes[l]['infected'] == False:
-#             integral_fun_t = lambda tf:quad(lambda t:integrand_homo_temporal_graph(G,l,t),[0,tf])
-#             scheduler[l]=fsolve(quad(integral_fun_t+np.log(r[l]),-np.log(r[l])))
-#     return scheduler,
-
-
-# def inatlize_quarntine_graph(G,N,Alpha,Beta):
-#     Rates = np.zeros(N)
-#     for l in range(N):
-#         if G.nodes[l]['infected'] == True:
-#             Rates[l] = Alpha
-#             for i in G[l]:
-#                 if (G.nodes[i]['infected'] == False):
-#                     Rates[i] = Rates[i] +Beta*(G.nodes[i]['contact_rate'] * G.nodes[l]['spread_rate'])
-#     R_tot = np.sum(Rates)
-#     return R_tot, Rates
 
 
 def inatlize_quarntine_graph(G,N,Alpha,Beta):
@@ -157,6 +143,22 @@ def inatlize_inf_DiGraph(G,Num_inf,N,Alpha,Beta):
                     Rates[i] = Rates[i] + Beta
     R_tot = np.sum(Rates)
     return R_tot, Rates
+
+
+def inatlize_bi_cat_DiGraph(G,Num_inf,N):
+    inf_node = np.zeros(N,dtype=bool)
+    for i in rand.sample(range(0, N - 1), Num_inf):
+        G.nodes[i]['infected'] = True
+        inf_node[i] = True
+    inf_links = np.zeros(N,dtype=int)
+    for l in range(N):
+        if G.nodes[l]['infected'] == True:
+            for i in G[l]:
+                if (G.nodes[i]['infected'] == False):
+                    inf_links[i] = inf_links[i] + 1
+    inf_links_tot = np.sum(inf_links)
+    return inf_links_tot, inf_links, inf_node
+
 
 def inatlize_inf_weighted_graph(G,Num_inf,N,Alpha,Beta):
     for i in rand.sample(range(0, N - 1), Num_inf):
@@ -264,6 +266,7 @@ def uniform_beta(N,epsilon_lam,epsilon_mu,correlation):
     beta_mu=sorted(beta_mu,reverse=True) if correlation is 'a' else sorted(beta_mu,reverse=False)
     return beta_lam,beta_mu
 
+
 def general_beta(N,epsilon_lam,epsilon_mu,name,avg_degree):
     beta_lam = np.array(rand_networks.create_random_degree_sequence(name, np.abs(epsilon_lam), avg_degree, N)/avg_degree)
     beta_mu = np.array(rand_networks.create_random_degree_sequence(name, np.abs(epsilon_mu), avg_degree, N)/avg_degree)
@@ -271,7 +274,6 @@ def general_beta(N,epsilon_lam,epsilon_mu,name,avg_degree):
     # beta_mu=sorted(beta_mu,reverse=True) if epsilon_lam * epsilon_mu > 0 else sorted(beta_mu,reverse=False)
     beta_mu=np.sort(beta_mu) if epsilon_lam * epsilon_mu > 0 else np.sort(beta_mu)[::-1]
     return beta_lam, beta_mu
-
 
 
 if __name__ == '__main__':

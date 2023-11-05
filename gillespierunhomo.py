@@ -824,7 +824,9 @@ def bi_varying_rates(Alpha,bank,outfile,infile,runs,seed_nodes,Time_limit):
         Total_time = 0.0
         Num_inf = seed_nodes
         r = np.random.uniform(0, 1, (bank, 2))
-        R_tot, Rates = netinithomo.inatlize_inf_DiGraph(G, Num_inf, G.number_of_nodes(), Alpha, beta_org)
+        inf_links_tot, inf_links, inf_node = netinithomo.inatlize_direct_graph(G,Num_inf,G.number_of_nodes())
+        Rates = inf_links * beta_org + Alpha * inf_node
+        R_tot = np.sum(Rates)
         ######################
         # Main Gillespie Loop
         ######################
@@ -839,32 +841,41 @@ def bi_varying_rates(Alpha,bank,outfile,infile,runs,seed_nodes,Time_limit):
             else:
                 b = beta_org
             count = count + 1
+
             try:
                 if G.nodes[person]['infected'] == True:
                     pass
             except:
-                print('Accessing G.noes[person][infected] failed value of person is ', person)
+                print('Accessing G.nodes[person][infected] failed value of person is ', person)
                 if person == G.number_of_nodes():
                     person = G.number_of_nodes() - 1
+
+
             if G.nodes[person]['infected'] == True:
                 Num_inf = Num_inf - 1
-                Rates[person] = 0.0
+                inf_links[person] = 0
+                inf_node[person] = False
                 for Neighbor in G[person]:
                     if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] - b
-                        R_tot = R_tot - b
+                        inf_links[Neighbor] = inf_links[Neighbor] - 1
+                        inf_links_tot = inf_links_tot - 1
                     else:
-                        Rates[person] = Rates[person] + b
-                R_tot = R_tot + Rates[person] - Alpha
+                        inf_links[person] = inf_links[person] + 1
+                        inf_links_tot = inf_links_tot + 1
                 G.nodes[person]['infected'] = False
+                Rates = inf_links * b + Alpha * inf_node
+                R_tot = inf_links_tot * b +Alpha * Num_inf
             else:
                 Num_inf = Num_inf + 1
+                inf_node[person] = True
+                inf_links_tot = inf_links_tot - inf_links[person]
+                inf_links[person] = 0
                 for Neighbor in G[person]:
                     if G.nodes[Neighbor]['infected'] == False:
-                        Rates[Neighbor] = Rates[Neighbor] + b
-                        R_tot = R_tot + b
-                R_tot = R_tot - Rates[person] + Alpha
-                Rates[person] = Alpha
+                        inf_links[Neighbor] = inf_links[Neighbor] + 1
+                        inf_links_tot = inf_links_tot + 1
+                Rates = inf_links * b + Alpha * inf_node
+                R_tot = inf_links_tot * b +Alpha * Num_inf
                 G.nodes[person]['infected'] = True
             count = count + 1
             if count >= bank:
@@ -1247,8 +1258,8 @@ def actasmain():
     N = 500
     k = 200
     x = 0.2
-    eps_din,eps_dout = 0.1,0.1
-    eps_sus,eps_lam = 0.1,0.1
+    eps_din,eps_dout = 0.0,0.0
+    eps_sus,eps_lam = 0.0,0.0
     Num_inf = int(x * N)
     Alpha = 1.0
     susceptibility = 'bimodal'
@@ -1276,7 +1287,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.8, 2.0, 10.0,'c'
+    factor, duration, time_q,beta_time_type = 0.9, 10.0, 50.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -1289,14 +1300,16 @@ def actasmain():
     # G = netinithomo.intalize_lam_graph(G, N, beta_sus, beta_inf)
     d1_in, d1_out, d2_in, d2_out = int(k * (1 - eps_din)), int(k * (1 - eps_dout)), int(k * (1 + eps_din)), int(
         k * (1 + eps_dout))
+    d1,d2 = int(k * (1 - eps_din)),int(k * (1 + eps_din))
     # G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
     # G = netinithomo.set_graph_attriubute_DiGraph(G)
     # beta = lambda t: Beta_avg
     # G = nx.random_regular_graph(k, N)
     # beta_inf, beta_sus = netinithomo.bi_beta_correlated(N, eps_lam, eps_sus, 1.0)
     # G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus, beta_inf)
-    G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out, d2_in, d2_out, N)
-    G = netinithomo.set_graph_attriubute_DiGraph(G)
+    G = rand_networks.random_bimodal_graph(d1,d2, N)
+    G = netinithomo.intalize_homo_temporal_graph(G)
+    # G = netinithomo.inatlize_direct_graph(G,Num_inf,N)
     n=0
     infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n) + '.pickle'
 

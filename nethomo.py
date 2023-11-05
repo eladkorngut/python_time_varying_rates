@@ -9,7 +9,8 @@ import pickle
 if __name__ == '__main__':
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
-    eps_din,eps_dout = 0.0,0.0
+    # eps_din,eps_dout = 0.0,0.0
+    eps_degree = 0.0
     N = 500
     k = 200
     x = 0.2
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     Num_inital_conditions= 50000
     bank = 1000000
     parts = 1
-    foldername ='c2d_N500_k200_net20_init50000_lam13_start50_alpha1_fraction08_eps0_duration10_ends150'
+    foldername = 'c2d_N500_k200_net20_init50000_lam13_start50_alpha1_fraction095_eps0_duration10_ends150'
     graphname  = 'GNull'
     count = 0
     factor, duration, time_q,beta_time_type = 0.95, 10.0, 50.0,'c'
@@ -343,14 +344,15 @@ if __name__ == '__main__':
                           str(Alpha) + ' ' + str(bank) + ' ' + str(outfile) + ' ' +str(Num_inital_conditions) +
                           ' ' + str(Num_inf) + ' ' + str(Time_limit)+ ' ' + str(N))
     elif prog == 'c2d' :
-        Beta = Beta_avg / (1 + eps_din * eps_dout)
-        d1_in, d1_out, d2_in, d2_out = int(k*(1-eps_din)),int(k*(1-eps_dout)),int(k*(1+eps_din)),int(k*(1+eps_dout))
+        # Beta = Beta_avg / (1 + eps_din * eps_dout)
+        Beta = Beta_avg / (1 + eps_degree**2)
+        d1, d2 = int(k*(1-eps_degree)),int(k*(1+eps_degree))
         with open('run_parameters.npy', 'wb') as f:
             np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time]))
         for n in range(Num_different_networks):
-            G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out,d2_in,d2_out,N)
-            G = netinithomo.set_graph_attriubute_DiGraph(G)
-            infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
+            G = rand_networks.random_bimodal_graph(d1,d2, N)
+            G = netinithomo.intalize_homo_temporal_graph(G)
+            infile = graphname + '_' + str(eps_degree).replace('.', '') + '_' + str(n)+'.pickle'
             nx.write_gpickle(G, infile)
             with open('parmeters.npy', 'wb') as f:
                 np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
