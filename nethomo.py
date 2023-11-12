@@ -10,9 +10,9 @@ if __name__ == '__main__':
     Epsilon_sus = [0.0]
     Epsilon_inf = [0.0]
     # eps_din,eps_dout = 0.0,0.0
-    eps_degree = 0.0
-    N = 500
-    k = 200
+    eps_degree = 0.1
+    N = 200
+    k = 80
     x = 0.2
     Num_inf = int(x * N)
     Alpha = 1.0
@@ -25,10 +25,10 @@ if __name__ == '__main__':
     Num_inital_conditions= 50000
     bank = 1000000
     parts = 1
-    foldername = 'c2d_N500_k200_net20_init50000_lam13_start50_alpha1_fraction095_eps0_duration10_ends150'
+    foldername = 'c2d_N200_k80_net20_init50000_lam13_start50_alpha1_fraction09_eps01_duration10_ends150'
     graphname  = 'GNull'
     count = 0
-    factor, duration, time_q,beta_time_type = 0.95, 10.0, 50.0,'c'
+    factor, duration, time_q,beta_time_type = 0.9, 10.0, 50.0,'c'
     rate_type ='ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -348,7 +348,7 @@ if __name__ == '__main__':
         Beta = Beta_avg / (1 + eps_degree**2)
         d1, d2 = int(k*(1-eps_degree)),int(k*(1+eps_degree))
         with open('run_parameters.npy', 'wb') as f:
-            np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time]))
+            np.save(f, np.array([N, Num_inital_conditions, Num_different_networks, Lam,Time_limit,Start_recording_time,eps_degree]))
         for n in range(Num_different_networks):
             G = rand_networks.random_bimodal_graph(d1,d2, N)
             G = netinithomo.intalize_homo_temporal_graph(G)
