@@ -22,7 +22,9 @@ def fluctuation_init(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank,outfilena
         if type == 'gauss' else np.random.gamma((avg_beta / epsilon) ** 2, epsilon ** 2 / avg_beta, N) \
         if type == 'gamma' else netinithomo.bi_beta(N, epsilon, avg_beta)
     Beta = choose_beta(type)
-    G = nx.read_gpickle(G_name+ending)
+    with open(G_name+ending, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     T = []
     Num_inf = int(x * N)
     R_tot, Rates = netinithomo.intialize_graph(G, N, Num_inf, Beta, Alpha)
@@ -82,7 +84,9 @@ def fluctuation_init(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank,outfilena
 
 
 def fluctuation_run(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta):
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes= Num_inf
     tau_extinction,tau_presistnce=[],[]
     for run_loop_counter in range(runs):
@@ -192,7 +196,9 @@ def fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,runs,Num_in
                 R_tot, Rates = netinithomo.inatlize_quarntine_graph(G, G.number_of_nodes(), Alpha, Beta)
         return quarntine,Beta, R_tot, Rates
 
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes= Num_inf
     Beta_org=Beta
     for run_loop_counter in range(runs):
@@ -268,7 +274,9 @@ def fluctuation_run_catastrophe(Alpha,Time_limit,bank,outfile,infile,runs,Num_in
 
 
 def fluctuation_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,network_number,Beta,start_recording_time):
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes= Num_inf
     for run_loop_counter in range(runs):
         T = []
@@ -396,7 +404,9 @@ def temporal_direct_run_no_decay(Alpha,Time_limit,bank,outfile,infile,runs,Num_i
                 Rates.append(len(Rates[-1] +infected_neghibors[i])*fun(Total_time+dt))
         return Rates
 
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     if rate_type=='c':
         Beta = float(np.load('parmeters.npy'))
         fun = lambda t:Beta
@@ -492,7 +502,9 @@ def temporal_direct_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_nu
                 Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
 
     if rate_type=='c':
         Beta = float(np.load('parmeters.npy'))
@@ -578,8 +590,9 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
                 # Rates[i+1] = Rates[i] + len(infected_neghibors[i+1])*fun(Total_time+dt)
         return Rates
 
-
-    G=nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
 
     if rate_type=='c':
         Beta = float(np.load('parmeters.npy'))
@@ -674,7 +687,9 @@ def temporal_direct_run(Alpha,bank,outfile,infile,runs,Num_inf,network_number,ra
 
 
 def fluctuation_run_extinction(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
-    G = nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -817,7 +832,9 @@ def well_mixed_diff_rates_reg(Alpha,bank,outfile,runs,seed_nodes,Time_limit,N):
 
 def bi_varying_rates(Alpha,bank,outfile,infile,runs,seed_nodes,Time_limit):
     time_q,beta_org,beta_factor,duration = np.load('parmeters.npy')
-    G = nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     tau_extinction,tau_presistnce = [], []
     for run_loop_counter in range(runs):
         count = 0
@@ -894,7 +911,9 @@ def first_reaction_run_sis(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,net
             sum = sum + G.nodes[i]['rate'](t)
         return sum
 
-    G = nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
 
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
@@ -961,7 +980,9 @@ def first_reaction_run_sis(Alpha,Time_limit,bank,outfile,infile,runs,Num_inf,net
 
 
 def fluctuation_run_extinction_undirected_graph(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
-    G = nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -1021,7 +1042,9 @@ def fluctuation_run_extinction_undirected_graph(Alpha,bank,outfile,infile,runs,N
 
 
 def fluctuation_run_extinction_DiGraph(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
-    G = nx.read_gpickle(infile)
+    with open(infile, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     seed_nodes = Num_inf
     for run_loop_counter in range(runs):
         Total_time = 0.0
@@ -1083,7 +1106,9 @@ def fluctuation_run_extinction_DiGraph(Alpha,bank,outfile,infile,runs,Num_inf,ne
 def fluctuation_init_track_lam(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank,outfilename):
     lam_plus, lam_minus = avg_beta*(1+epsilon), avg_beta*(1-epsilon)
     Beta = netinithomo.bi_beta(N, epsilon, avg_beta)
-    G=nx.read_gpickle(G_name)
+    with open(G_name, 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     T = []
     Num_inf = int(x * N)
     R_tot, Rates,Num_inf_plus, Num_inf_minus = netinithomo.intialize_graph_track_bimodal(G, N, Num_inf, Beta, Alpha,lam_plus,lam_minus)
@@ -1158,7 +1183,9 @@ def fluctuation_init_track_lam(epsilon,avg_beta,x,N,G_name,Alpha,Time_limit,bank
 
 def fluctuation_run_track_lam(Alpha,Time_limit,bank,outfile,infile,epsilon,avg_beta):
     lam_plus, lam_minus = avg_beta*(1+epsilon), avg_beta*(1-epsilon)
-    G=nx.read_gpickle(infile+'_G.pickle')
+    with open(infile+'_G.pickle', 'rb') as f:
+        # Load the network from the pickle file
+        G = pickle.load(f)
     with open(infile+'_Num_inf.pickle','rb') as pickle_file:
         Num_inf = pickle.load(pickle_file)
     pickle_file.close()
