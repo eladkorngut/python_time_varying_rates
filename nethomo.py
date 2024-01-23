@@ -63,7 +63,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -78,7 +79,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -129,7 +131,8 @@ if __name__ == '__main__':
                 # beta_all = choose_beta(susceptibility,susceptibility_avg,epsilon_sus)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -143,7 +146,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -157,7 +161,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -173,7 +178,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -188,7 +194,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(epsilon_sus).replace('.', '') + '_' + str(n)+'.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile ='o'+str(epsilon_sus).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -200,7 +207,8 @@ if __name__ == '__main__':
             G = rand_networks.random_bimodal_directed_graph(d1_in, d1_out,d2_in,d2_out,N)
             G = netinithomo.set_graph_attriubute_DiGraph(G)
             infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             outfile ='o_d1in' + str(d1_in).replace('.', '') +'_o_d1out' + str(d1_out).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -210,7 +218,8 @@ if __name__ == '__main__':
             G = rand_networks.configuration_model_directed_graph(directed_model, eps_din,eps_dout,k,N)
             G = netinithomo.set_graph_attriubute_DiGraph(G)
             infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             outfile ='o_eps_in' + str(np.abs(eps_din)).replace('.', '') +'eps_dout' + str(np.abs(eps_dout)).replace('.', '')
             k_avg_graph = np.mean([G.in_degree(n) for n in G.nodes()])
             Beta_graph = Lam/k_avg_graph
@@ -232,7 +241,8 @@ if __name__ == '__main__':
             # G = nx.complete_graph(N)
             G = netinithomo.intalize_lam_graph(G, N, beta_sus,beta_inf)
             infile = graphname + '_' + str(eps_sus).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             eps_sus_graph = np.std(beta_sus)/np.mean(beta_sus)
             eps_lam_graph = np.std(beta_inf)/np.mean(beta_inf)
             Beta = Beta_avg / (1 + np.sign(eps_sus)*eps_sus_graph * np.sign(eps_lam)* eps_lam_graph)
@@ -257,7 +267,8 @@ if __name__ == '__main__':
             # G = nx.random_regular_graph(k, N)
             # G = nx.complete_graph(N)
             infile = graphname + '_' + str(eps_din).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             outfile ='o_d1in' + str(d1_in).replace('.', '') +'_o_d1out' + str(d1_out).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -276,7 +287,8 @@ if __name__ == '__main__':
             # G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             outfile ='o'+str(Beta_avg).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py '+str(prog) + ' ' +
@@ -298,7 +310,8 @@ if __name__ == '__main__':
             G = nx.complete_graph(N)
             G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             outfile = 'o' + str(Lam).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
@@ -324,7 +337,8 @@ if __name__ == '__main__':
                 G = nx.complete_graph(N)
                 G = netinithomo.intalize_hetro_temporal_graph(G, N, beta_sus,beta_inf)
                 infile = graphname + '_' + str(Lam).replace('.', '') + '_' + str(n) + '.pickle'
-                nx.write_gpickle(G, infile)
+                with open(infile, 'wb') as f:
+                    pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
                 outfile = 'o' + str(Lam).replace('.', '')
                 for p in range(parts):
                     os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
@@ -353,7 +367,10 @@ if __name__ == '__main__':
             G = rand_networks.random_bimodal_graph(d1,d2, N)
             G = netinithomo.intalize_homo_temporal_graph(G)
             infile = graphname + '_' + str(eps_degree).replace('.', '') + '_' + str(n)+'.pickle'
-            nx.write_gpickle(G, infile)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
+            with open(infile, 'wb') as f:
+                pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             with open('parmeters.npy', 'wb') as f:
                 np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
             outfile = 'o_' + str(n).replace('.', '')
