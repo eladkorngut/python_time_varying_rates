@@ -372,7 +372,7 @@ if __name__ == '__main__':
             with open(infile, 'wb') as f:
                 pickle.dump(G, f, pickle.HIGHEST_PROTOCOL)
             with open('parmeters.npy', 'wb') as f:
-                np.save(f, np.array([time_q, Beta_avg, Beta_avg*factor,duration]))
+                np.save(f, np.array([time_q, Beta, Beta*factor,duration]))
             outfile = 'o_' + str(n).replace('.', '')
             for p in range(parts):
                 os.system(dir_path + '/slurm.serjob python3 ' + dir_path + '/gillespierunhomo.py ' + str(prog) + ' ' +
