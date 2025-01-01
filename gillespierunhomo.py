@@ -848,15 +848,17 @@ def bi_varying_rates(Alpha,bank,outfile,infile,runs,seed_nodes,Time_limit):
         # Main Gillespie Loop
         ######################
         while Num_inf>0 and  Total_time<Time_limit:
+            if (Total_time > time_q and Total_time <= time_q + duration):
+                b =  beta_factor
+                Rates = inf_links * b + Alpha * inf_node
+                R_tot = inf_links_tot * b + Alpha * Num_inf
+            else:
+                b = beta_org
             R_norm = np.cumsum(Rates)
             r_pos = R_tot * r[count, 1]
             person = bisect.bisect_left(R_norm, r_pos)
             tau = np.log(1 / r[count, 0]) / R_tot
             Total_time = Total_time + tau
-            if (Total_time > time_q and Total_time <= time_q + duration):
-                b =  beta_factor
-            else:
-                b = beta_org
             count = count + 1
 
             try:
@@ -1039,7 +1041,6 @@ def fluctuation_run_extinction_undirected_graph(Alpha,bank,outfile,infile,runs,N
             writer.writerows([[Total_time,network_number]])
         f.close()
     return 0
-
 
 def fluctuation_run_extinction_DiGraph(Alpha,bank,outfile,infile,runs,Num_inf,network_number,Beta):
     with open(infile, 'rb') as f:
@@ -1314,7 +1315,7 @@ def actasmain():
     # Beta = Beta_avg / (1 - Epsilon_sus[0] * Epsilon_inf[0]) if sus_inf_correlation is 'a' else Beta_avg / (
     #             1 + Epsilon_sus[0] * Epsilon_inf[0])
     Beta = Beta_avg / (1 + eps_lam * eps_sus)
-    factor, duration, time_q,beta_time_type = 0.9, 10.0, 50.0,'c'
+    factor, duration, time_q,beta_time_type = 0.0, 10.0, 50.0,'c'
     rate_type= 'ca'
     amplitude,frequency = 1.0,1.0
     parameters = Beta_avg if rate_type=='c' else [Beta_avg,amplitude,frequency]
@@ -1398,7 +1399,7 @@ def actasmain():
     #                                    Num_inf, 1, Beta)
 
 if __name__ == '__main__':
-    submit = False
+    submit = True
     if submit==True:
         actasmain()
     else:
